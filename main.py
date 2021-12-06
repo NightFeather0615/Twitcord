@@ -38,9 +38,9 @@ async def on_raw_reaction_add(payload):
           for message in pins:
             await message.unpin()
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-        await user.send(f"請前往以下網址登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送到此處。\n{auth.get_authorization_url()}")
+        auth_msg = await user.send(f"請前往以下網址登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送到此處。\n{auth.get_authorization_url()}")
         def check(m):
-          return m.author == user and m.channel == user.channel
+          return m.author == user and m.channel == auth_msg.channel
         try:
           msg = await client.wait_for(event="message", check=check, timeout=60.0)
         except asyncio.TimeoutError:
