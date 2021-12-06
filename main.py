@@ -52,6 +52,7 @@ async def on_message(message):
   if message.content.startswith("https://twitter.com"):
     await message.add_reaction("❤️")
     await message.add_reaction("🔁")
+  await client.process_commands(message)
 
 @client.command()
 async def setup(ctx):
