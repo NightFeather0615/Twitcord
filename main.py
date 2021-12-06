@@ -27,11 +27,13 @@ async def on_ready():
 @client.event
 async def on_raw_reaction_add(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
-  emoji_list = ["❤️", "🔁", "🔗"]
+  emoji_list = ["❤️", "🔁"]
   if message.content.startswith("https://twitter.com"):
     user = client.get_user(int(payload.member.id))
     if user != client.user:
       pins = await user.pins()
+      if len(pins) == 0 and str(payload.emoji) == "🔗"::
+        await user.send("輸入`tc!setup`來綁定Twitter帳號。")
       if len(pins) != 0 and str(payload.emoji) in emoji_list:
         if pins[0].content.startswith("Twitter User Token"):
           token_list = pins[0].content.split("\n")
