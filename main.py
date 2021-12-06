@@ -64,11 +64,11 @@ async def on_message(message):
 async def setup(ctx):
   if isinstance(ctx.channel, discord.channel.DMChannel):
     pins = await ctx.channel.pins()
-    if len(ctx.channel.pins()) != 0:
+    if len(pins) != 0:
       for message in pins:
         await message.unpin()
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    await ctx.send(f"請前往以下網址登入並點擊\"Authorize app\"後，將驗證PIN碼發送到此處。\n{auth.get_authorization_url()}")
+    await ctx.send(f"請前往以下網址登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送到此處。\n{auth.get_authorization_url()}")
     def check(m):
       return m.author == ctx.author and m.channel == ctx.channel
     try:
