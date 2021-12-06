@@ -33,7 +33,32 @@ async def on_raw_reaction_add(payload):
     if user != client.user:
       pins = await user.pins()
       if len(pins) == 0 and str(payload.emoji) == "🔗":
-        await user.send("輸入`tc!setup`來綁定Twitter帳號。")
+        pins = await user.pins()
+        if len(pins) != 0:
+          for message in pins:
+            await message.unpin()
+        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+        await user.send(f"請前往以下網址登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送到此處。\n{auth.get_authorization_url()}")
+        def check(m):
+          return m.author == user and m.channel == user.channel
+        try:
+          msg = await client.wait_for(event="message", check=check, timeout=60.0)
+        except asyncio.TimeoutError:
+          embed=discord.Embed(title = "⚠️ 操作失敗", description = "等候逾時，請重新嘗試。", color=0xeca42c)
+          embed.set_footer(text="ERR_TIMEOUT")
+          await user.send(embed=embed)
+        else:
+          try:
+            auth.get_access_token(msg.content)
+          except:
+            embed=discord.Embed(title = "⚠️ 操作失敗", description = "驗證失敗，憑證遭拒。", color=0xeca42c)
+            embed.set_footer(text="ERR_UNAUTHORIZED")
+            await user.send(embed=embed)
+          else:
+            await user.send("驗證成功，為確保你的資訊安全，本機器人並**不**將你的資料儲存，而是在你進行反應時從私人訊息釘選抓取金鑰，所以請不要隨意釘選/解釘訊息。")
+            token_msg = await user.send(f"Twitter User Token\n`{auth.access_token}`\n`{auth.access_token_secret}`")
+            await token_msg.pin()
+        
       if len(pins) != 0 and str(payload.emoji) in emoji_list:
         if pins[0].content.startswith("Twitter User Token"):
           token_list = pins[0].content.split("\n")
