@@ -16,7 +16,7 @@ slash = SlashCommand(client, sync_commands=True)
 
 consumer_key = "QI2PdLu5ewUDlDr41tSsrvzDo"
 consumer_secret="EzP5PtU5omjlTAHS71jF20m9KhifyZwbOxGpso5wnQMgV4olSz"
-
+bearer_token = "AAAAAAAAAAAAAAAAAAAAAGZGWgEAAAAAnoGIiO%2B4fAh2BQC0Vc2yGw8uEmA%3DEWgL9g7KNbn5N7eyZd3v4JoZhbwKeFL8wOw3LvrCt8sYcHXkCE"
 
 @client.event
 async def on_ready():
@@ -27,7 +27,7 @@ async def on_ready():
 @client.event
 async def on_raw_reaction_add(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
-  emoji_list = ["❤️", "🔁"]
+  emoji_list = ["❤️", "🔁", "📡"]
   if message.content.startswith("https://twitter.com"):
     user = client.get_user(int(payload.member.id))
     if user != client.user:
@@ -38,6 +38,11 @@ async def on_raw_reaction_add(payload):
         except:
           pass
       if len(pins) == 0 and str(payload.emoji) == "🔁":
+        try:
+          await user.send("你尚未綁定Twitter帳號，請輸入`tc!setup`來進行帳號綁定。")
+        except:
+          pass
+      if len(pins) == 0 and str(payload.emoji) == "📡":
         try:
           await user.send("你尚未綁定Twitter帳號，請輸入`tc!setup`來進行帳號綁定。")
         except:
@@ -76,19 +81,26 @@ async def on_raw_reaction_add(payload):
           token_list = pins[0].content.split("\n")
           auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
           auth.set_access_token(token_list[1].replace("`", ""), token_list[2].replace("`", ""))
+          tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = token_list[1].replace("`", ""), access_token_secret = token_list[2].replace("`", ""))
           api = tweepy.API(auth)
           twitter_url = message.content
           twitter_url = twitter_url.split("/")[5::3]
           twitter_url = twitter_url[0].split("?")[::]
-          twitter_url = twitter_url[0]
+          tweet_id = twitter_url[0]
           if str(payload.emoji) == "❤️":
             try:
-              api.create_favorite(twitter_url)
+              tp_client.create_favorite(tweet_id)
             except:
               pass
           if str(payload.emoji) == "🔁":
             try:
-              api.retweet(twitter_url)
+              tp_client.retweet(tweet_id)
+            except:
+              pass
+          if str(payload.emoji) == "📡":
+            try:
+              tweet = tp_client.get_tweet(tweet_id, expansions='author_id')
+              tp_client.follow_user(tweet.includes['users'][0].id)
             except:
               pass
 
@@ -96,6 +108,7 @@ async def on_raw_reaction_add(payload):
 async def on_message(message):
   if message.content.startswith("https://twitter.com"):
     await message.add_reaction("🔗")
+    await message.add_reaction("📡")
     await message.add_reaction("🔁")
     await message.add_reaction("❤️")
   await client.process_commands(message)
