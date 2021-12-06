@@ -89,7 +89,7 @@ async def on_raw_reaction_add(payload):
           tweet_id = twitter_url[0]
           if str(payload.emoji) == "❤️":
             try:
-              tp_client.create_favorite(tweet_id)
+              tp_client.like(tweet_id)
             except:
               pass
           if str(payload.emoji) == "🔁":
