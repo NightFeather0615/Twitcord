@@ -32,7 +32,7 @@ async def on_raw_reaction_add(payload):
     user = client.get_user(int(payload.member.id))
     if user != client.user:
       pins = await user.pins()
-      if len(pins) == 0 and str(payload.emoji) == "🔗"::
+      if len(pins) == 0 and str(payload.emoji) == "🔗":
         await user.send("輸入`tc!setup`來綁定Twitter帳號。")
       if len(pins) != 0 and str(payload.emoji) in emoji_list:
         if pins[0].content.startswith("Twitter User Token"):
