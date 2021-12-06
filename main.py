@@ -133,7 +133,7 @@ async def setup(ctx):
     await auth_process(ctx.author)
   else:
     embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
-    await auth_process(ctx.author)
     await ctx.send(embed=embed)
+    await auth_process(ctx.author)
 
 client.run("OTE3MTIyNDI1MTAyMTYzOTcx.Ya0G0Q.ZgU4NJ3pWFrCoyjNkH8-3M2Ux1Y")
