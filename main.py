@@ -27,7 +27,7 @@ async def on_ready():
 @client.event
 async def on_raw_reaction_add(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
-  emoji_list = ["❤️", "🔁"]
+  emoji_list = ["❤️", "🔁", "🔗"]
   if message.content.startswith("https://twitter.com"):
     user = client.get_user(int(payload.member.id))
     if user != client.user:
@@ -56,6 +56,7 @@ async def on_raw_reaction_add(payload):
 @client.event
 async def on_message(message):
   if message.content.startswith("https://twitter.com"):
+    await message.add_reaction("🔗")
     await message.add_reaction("🔁")
     await message.add_reaction("❤️")
   await client.process_commands(message)
