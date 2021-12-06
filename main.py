@@ -43,22 +43,32 @@ async def on_raw_reaction_add(payload):
           twitter_url = twitter_url[0].split("?")[::]
           twitter_url = twitter_url[0]
           if str(payload.emoji) == "❤️":
-            api.create_favorite(twitter_url)
+            try:
+              api.create_favorite(twitter_url)
+            expect:
+              pass
           if str(payload.emoji) == "🔁":
-            api.retweet(twitter_url)
+            try:
+              api.retweet(twitter_url)
+            except:
+              pass
 
 @client.event
 async def on_message(message):
   if message.content.startswith("https://twitter.com"):
-    await message.add_reaction("❤️")
     await message.add_reaction("🔁")
+    await message.add_reaction("❤️")
   await client.process_commands(message)
 
 @client.command()
 async def setup(ctx):
   if isinstance(ctx.channel, discord.channel.DMChannel):
+    pins = await ctx.channel.pins()
+    if len(ctx.channel.pins()) != 0:
+      for message in pins:
+        await message.unpin()
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    await ctx.send(auth.get_authorization_url())
+    await ctx.send(f"請前往以下網址登入並點擊\"Authorize app\"後，將驗證PIN碼發送到此處。\n{auth.get_authorization_url()}")
     def check(m):
       return m.author == ctx.author and m.channel == ctx.channel
     try:
