@@ -45,7 +45,7 @@ async def on_raw_reaction_add(payload):
           if str(payload.emoji) == "❤️":
             try:
               api.create_favorite(twitter_url)
-            expect:
+            except:
               pass
           if str(payload.emoji) == "🔁":
             try:
