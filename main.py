@@ -130,9 +130,10 @@ async def on_message(message):
 @client.command()
 async def setup(ctx):
   if isinstance(ctx.channel, discord.channel.DMChannel):
-    await auth_process(ctx.channel)
+    await auth_process(ctx.author)
   else:
-    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息進行綁定。", color=0x3983f2)
+    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
+    await auth_process(ctx.author)
     await ctx.send(embed=embed)
 
 client.run("OTE3MTIyNDI1MTAyMTYzOTcx.Ya0G0Q.ZgU4NJ3pWFrCoyjNkH8-3M2Ux1Y")
