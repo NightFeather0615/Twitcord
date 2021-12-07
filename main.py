@@ -107,7 +107,7 @@ async def on_raw_reaction_add(payload):
 @client.event
 async def on_message(message):
   if any(word in message.content for word in twitter_url):
-    reaction_list = ["❤️", "🔁", "📡", "🔗"]
+    reaction_list = ["🔗", "📡", "🔁", "❤️"]
     for i in reaction_list:
       await message.add_reaction(i)
       await asyncio.sleep(0.3)
