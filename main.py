@@ -56,7 +56,7 @@ async def auth_process(channel):
       else:
         embed=discord.Embed(title = "✅ 綁定成功", description = "為確保你的資訊安全，本機器人並**不**將你的資料儲存，而是在你進行反應時從私人訊息釘選抓取金鑰，所以請不要隨意釘選/解釘訊息。\n\n**如因Discord帳號遭盜用導致資料外洩，開發者不負任何責任，請自行承擔損失。**", color=0x3983f2)
         await channel.send(embed=embed)
-        token_msg = await channel.send(f"Twitter User Token\n`{auth.access_token}`\n`{auth.access_token_secret}`")
+        token_msg = await channel.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
         await token_msg.pin()
 
 @client.event
@@ -82,11 +82,13 @@ async def on_raw_reaction_add(payload):
       if len(pins) == 0 and str(payload.emoji) == "🔗":
         await auth_process(user)
       if len(pins) != 0 and str(payload.emoji) in emoji_list:
-        if pins[0].content.startswith("Twitter User Token"):
+        if pins[0].content.startswith("Twitter User Access Token"):
           token_list = pins[0].content.split("\n")
           auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-          auth.set_access_token(token_list[1].replace("`", ""), token_list[2].replace("`", ""))
-          tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = token_list[1].replace("`", ""), access_token_secret = token_list[2].replace("`", ""))
+          access_token = token_list[1].replace("`", "").replace("||", "")
+          access_token_secret = token_list[2].replace("`", "").replace("||", "")
+          auth.set_access_token(access_token, access_token_secret)
+          tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
           if str(payload.emoji) == "❤️":
             try:
               tp_client.like(get_id_from_url(message.content))
@@ -105,6 +107,39 @@ async def on_raw_reaction_add(payload):
               pass
 
 @client.event
+async def on_raw_reaction_remove(payload):
+  message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
+  emoji_list = ["❤️", "🔁", "📡"]
+  if any(word in message.content for word in twitter_url):
+    user = client.get_user(int(payload.user_id))
+    if user != client.user:
+      pins = await user.pins()
+      if len(pins) != 0 and str(payload.emoji) in emoji_list:
+        if pins[0].content.startswith("Twitter User Access Token"):
+          token_list = pins[0].content.split("\n")
+          auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+          access_token = token_list[1].replace("`", "").replace("||", "")
+          access_token_secret = token_list[2].replace("`", "").replace("||", "")
+          auth.set_access_token(access_token, access_token_secret)
+          tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+          if str(payload.emoji) == "❤️":
+            try:
+              tp_client.unlike(get_id_from_url(message.content))
+            except:
+              pass
+          if str(payload.emoji) == "🔁":
+            try:
+              tp_client.unretweet(get_id_from_url(message.content))
+            except:
+              pass
+          if str(payload.emoji) == "📡":
+            try:
+              tweet = tp_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+              tp_client.unfollow_user(tweet.includes['users'][0].id)
+            except:
+              pass
+
+@client.event
 async def on_message(message):
   if any(word in message.content for word in twitter_url):
     reaction_list = ["🔗", "📡", "🔁", "❤️"]
@@ -114,12 +149,28 @@ async def on_message(message):
   await client.process_commands(message)
 
 @client.command()
-async def setup(ctx):
+async def link(ctx):
   if isinstance(ctx.channel, discord.channel.DMChannel):
     await auth_process(ctx.author)
   else:
     embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
     await ctx.send(embed=embed)
     await auth_process(ctx.author)
+
+@client.command()
+async def unlink(ctx):
+  try:
+    pins = await ctx.author.pins()
+  except:
+    pass
+  else:
+    if len(pins) != 0:
+      for message in pins:
+        await message.unpin()
+    async for msg in ctx.author.history():
+      if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
+        await msg.edit(content = "Twitter User Access Token\n`Access Token cancelled`\n`Access Token Secret cancelled`")
+    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋。", color=0x3983f2)
+    await ctx.send(embed=embed)
 
 client.run("OTE3MTIyNDI1MTAyMTYzOTcx.Ya0G0Q.ZgU4NJ3pWFrCoyjNkH8-3M2Ux1Y")
