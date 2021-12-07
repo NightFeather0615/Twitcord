@@ -74,37 +74,36 @@ async def on_raw_reaction_add(payload):
     if user != client.user:
       pins = await user.pins()
       link_notify_embed=discord.Embed(title = "ℹ️ 你尚未綁定Twitter帳號", description = f"輸入`tc!link`來綁定Twitter帳號，方可使用Discord反應來喜歡、轉推或追蹤作者。", color=0x3983f2)
-      if len(pins) == 0 and str(payload.emoji) in emoji_list:
+      if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) in emoji_list:
         try:
           await user.send(embed=link_notify_embed)
         except:
           pass
-      if len(pins) == 0 and str(payload.emoji) == "🔗":
+      if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) == "🔗":
         await auth_process(user)
-      if len(pins) != 0 and str(payload.emoji) in emoji_list:
-        if pins[0].content.startswith("Twitter User Access Token"):
-          token_list = pins[0].content.split("\n")
-          auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-          access_token = token_list[1].replace("`", "").replace("||", "")
-          access_token_secret = token_list[2].replace("`", "").replace("||", "")
-          auth.set_access_token(access_token, access_token_secret)
-          tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
-          if str(payload.emoji) == "❤️":
-            try:
-              tp_client.like(get_id_from_url(message.content))
-            except:
-              pass
-          if str(payload.emoji) == "🔁":
-            try:
-              tp_client.retweet(get_id_from_url(message.content))
-            except:
-              pass
-          if str(payload.emoji) == "📡":
-            try:
-              tweet = tp_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
-              tp_client.follow_user(tweet.includes['users'][0].id)
-            except:
-              pass
+      if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token") and str(payload.emoji) in emoji_list:
+        token_list = pins[0].content.split("\n")
+        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+        access_token = token_list[1].replace("`", "").replace("||", "")
+        access_token_secret = token_list[2].replace("`", "").replace("||", "")
+        auth.set_access_token(access_token, access_token_secret)
+        tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+        if str(payload.emoji) == "❤️":
+          try:
+            tp_client.like(get_id_from_url(message.content))
+          except:
+            pass
+        if str(payload.emoji) == "🔁":
+          try:
+            tp_client.retweet(get_id_from_url(message.content))
+          except:
+            pass
+        if str(payload.emoji) == "📡":
+          try:
+            tweet = tp_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+            tp_client.follow_user(tweet.includes['users'][0].id)
+          except:
+            pass
 
 @client.event
 async def on_raw_reaction_remove(payload):
