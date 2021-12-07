@@ -11,7 +11,7 @@ from discord_slash.utils.manage_commands import *
 from discord_components import *
 from itertools import *
 
-client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | Type tc!setup in DM"))
+client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | Type tc!link in DM"))
 slash = SlashCommand(client, sync_commands=True)
 
 consumer_key = "QI2PdLu5ewUDlDr41tSsrvzDo"
@@ -73,7 +73,7 @@ async def on_raw_reaction_add(payload):
     user = client.get_user(int(payload.member.id))
     if user != client.user:
       pins = await user.pins()
-      link_notify_embed=discord.Embed(title = "ℹ️ 你尚未綁定Twitter帳號", description = f"輸入`tc!setup`來綁定Twitter帳號，方可使用Discord反應來喜歡、轉推或追蹤作者。", color=0x3983f2)
+      link_notify_embed=discord.Embed(title = "ℹ️ 你尚未綁定Twitter帳號", description = f"輸入`tc!link`來綁定Twitter帳號，方可使用Discord反應來喜歡、轉推或追蹤作者。", color=0x3983f2)
       if len(pins) == 0 and str(payload.emoji) in emoji_list:
         try:
           await user.send(embed=link_notify_embed)
