@@ -74,24 +74,13 @@ async def on_raw_reaction_add(payload):
     if user != client.user:
       pins = await user.pins()
       link_notify_embed=discord.Embed(title = "ℹ️ 你尚未綁定Twitter帳號", description = f"輸入`tc!setup`來綁定Twitter帳號，方可使用Discord反應來喜歡、轉推或追蹤作者。", color=0x3983f2)
-      if len(pins) == 0 and str(payload.emoji) == "❤️":
-        try:
-          await user.send(embed=link_notify_embed)
-        except:
-          pass
-      if len(pins) == 0 and str(payload.emoji) == "🔁":
-        try:
-          await user.send(embed=link_notify_embed)
-        except:
-          pass
-      if len(pins) == 0 and str(payload.emoji) == "📡":
+      if len(pins) == 0 and str(payload.emoji) in emoji_list:
         try:
           await user.send(embed=link_notify_embed)
         except:
           pass
       if len(pins) == 0 and str(payload.emoji) == "🔗":
         await auth_process(user)
-
       if len(pins) != 0 and str(payload.emoji) in emoji_list:
         if pins[0].content.startswith("Twitter User Token"):
           token_list = pins[0].content.split("\n")
@@ -118,13 +107,10 @@ async def on_raw_reaction_add(payload):
 @client.event
 async def on_message(message):
   if any(word in message.content for word in twitter_url):
-    await message.add_reaction("🔗")
-    await asyncio.sleep(0.3)
-    await message.add_reaction("📡")
-    await asyncio.sleep(0.3)
-    await message.add_reaction("🔁")
-    await asyncio.sleep(0.3)
-    await message.add_reaction("❤️")
+    reaction_list = ["❤️", "🔁", "📡", "🔗"]
+    for i in reaction_list:
+      await message.add_reaction(i)
+      await asyncio.sleep(0.3)
   await client.process_commands(message)
 
 @client.command()
