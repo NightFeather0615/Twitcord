@@ -73,7 +73,7 @@ async def on_raw_reaction_add(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
   emoji_list = ["❤️", "🔁", "📡"]
   if any(word in message.content for word in twitter_url):
-    user = client.get_user(int(payload.member.id))
+    user = client.get_user(int(payload.user_id))
     if user != client.user:
       pins = await user.pins()
       link_notify_embed=discord.Embed(title = "ℹ️ 你尚未綁定Twitter帳號", description = f"輸入`tc!link`來綁定Twitter帳號，方可使用Discord反應來喜歡、轉推或追蹤作者。", color=0x3983f2)
@@ -185,11 +185,12 @@ async def unlink(ctx):
 
 @slash.slash(description="綁定推特帳號")
 async def link(ctx):
+  await ctx.send("Processing...", delete_after = 0.01)
   if isinstance(ctx.channel, discord.channel.DMChannel):
     await auth_process(ctx.author)
   else:
     embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
-    await ctx.send(embed=embed, delete_after = 5.0)
+    await ctx.channel.send(embed=embed, delete_after = 5.0)
     await auth_process(ctx.author)
 
 @slash.slash(description="解除綁定推特帳號")
