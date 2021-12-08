@@ -171,7 +171,7 @@ async def unlink(ctx):
         await message.unpin()
     async for msg in ctx.author.history():
       if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
-        await msg.edit(content = "Twitter User Access Token\n`Access Token cancelled`\n`Access Token Secret cancelled`")
+        await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
     embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋。", color=0x3983f2)
     await ctx.send(embed=embed)
 
