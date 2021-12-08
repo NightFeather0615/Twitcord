@@ -33,7 +33,7 @@ async def auth_process(channel):
       await message.unpin()
   async for msg in channel.history():
     if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
-      await msg.edit(content = "[Cancelled] Twitter User Access Token\n`Access Token cancelled`\n`Access Token Secret cancelled`")
+      await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
   auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   try:
     embed=discord.Embed(title = "🔗 綁定Twitter帳號", description = f"請前往[Twitter API Authorize]({auth.get_authorization_url()})，登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送至此處。", color=0x3983f2)
