@@ -17,14 +17,25 @@ slash = SlashCommand(client, sync_commands=True)
 consumer_key = "QI2PdLu5ewUDlDr41tSsrvzDo"
 consumer_secret="EzP5PtU5omjlTAHS71jF20m9KhifyZwbOxGpso5wnQMgV4olSz"
 bearer_token = "AAAAAAAAAAAAAAAAAAAAAGZGWgEAAAAAnoGIiO%2B4fAh2BQC0Vc2yGw8uEmA%3DEWgL9g7KNbn5N7eyZd3v4JoZhbwKeFL8wOw3LvrCt8sYcHXkCE"
-twitter_url = ["https://twitter.com"]
+twitter_url = ["https://twitter.com", "https://fxtwitter.com"]
 
-def get_id_from_url(url):
-  url = url.split("https://twitter.com")
-  url = url[1].split("/")[3::3]
-  url = url[0].split("?")[::]
-  url = url[0]
-  return url
+def get_id_from_url(tweet_url):
+  tweet_url = tweet_url.split("https://")
+  if len(tweet_url) == 2:
+      tweet_url = tweet_url[1].split("twitter.com")
+      if len(tweet_url) == 2:
+          tweet_url = tweet_url[1].split("/")[3::3]
+          tweet_url = tweet_url[0].split("?")[::]
+          tweet_id = tweet_url[0]
+          return tweet_id
+      else:
+          tweet_url = tweet_url[1].split("fxtwitter.com")
+          tweet_url = tweet_url[1].split("/")[3::3]
+          tweet_url = tweet_url[0].split("?")[::]
+          tweet_id = tweet_url[0]
+          return tweet_id
+  else:
+    return None
 
 async def auth_process(channel):
   pins = await channel.pins()
@@ -72,7 +83,7 @@ async def on_ready():
 async def on_raw_reaction_add(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
   emoji_list = ["❤️", "🔁", "📡"]
-  if any(word in message.content for word in twitter_url):
+  if any(word in message.content for word in twitter_url) and get_id_from_url(message.content) != None:
     user = client.get_user(int(payload.user_id))
     if user != client.user:
       pins = await user.pins()
@@ -88,21 +99,21 @@ async def on_raw_reaction_add(payload):
         access_token = token_list[1].replace("`", "").replace("||", "")
         access_token_secret = token_list[2].replace("`", "").replace("||", "")
         auth.set_access_token(access_token, access_token_secret)
-        tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+        twitter_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
         if str(payload.emoji) == "❤️":
           try:
-            tp_client.like(get_id_from_url(message.content))
+            twitter_client.like(get_id_from_url(message.content))
           except:
             pass
         if str(payload.emoji) == "🔁":
           try:
-            tp_client.retweet(get_id_from_url(message.content))
+            twitter_client.retweet(get_id_from_url(message.content))
           except:
             pass
         if str(payload.emoji) == "📡":
           try:
-            tweet = tp_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
-            tp_client.follow_user(tweet.includes['users'][0].id)
+            tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+            twitter_client.follow_user(tweet.includes['users'][0].id)
           except:
             pass
 
