@@ -57,7 +57,7 @@ async def auth_process(channel):
         embed.set_footer(text="ERR_UNAUTHORIZED")
         await channel.send(embed=embed)
       else:
-        embed=discord.Embed(title = "✅ 綁定成功", description = "為確保你的資訊安全，機器人不會儲存你的資料，而是在你進行反應時從私人訊息釘選抓取金鑰，請不要隨意釘選/解釘訊息。\n\n你隨時可以透過`tc!unlink`註銷。\n\n**如因Discord帳號遭盜用導致資料外洩，開發者不負任何責任，請自行承擔損失。**", color=0x3983f2)
+        embed=discord.Embed(title = "✅ 綁定成功", description = "為確保你的資訊安全，機器人不會儲存你的資料，而是在你進行反應時從私人訊息釘選抓取金鑰，請不要隨意釘選/解釘訊息。\n\n你隨時可以透過`/link`(`tc!unlink`)註銷。\n\n**如因Discord帳號遭盜用導致資料外洩，開發者不負任何責任，請自行承擔損失。**", color=0x3983f2)
         await channel.send(embed=embed)
         token_msg = await channel.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
         await token_msg.pin()
