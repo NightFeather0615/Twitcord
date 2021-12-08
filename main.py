@@ -178,6 +178,16 @@ async def link(ctx):
     await ctx.reply(embed=embed, delete_after = 5.0, mention_author=False)
     await auth_process(ctx.author)
 
+@slash.slash(description="綁定推特帳號")
+async def link(ctx):
+  await ctx.send("Processing...", delete_after = 0.01)
+  if isinstance(ctx.channel, discord.channel.DMChannel):
+    await auth_process(ctx.author)
+  else:
+    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
+    await ctx.channel.send(embed=embed, delete_after = 5.0)
+    await auth_process(ctx.author)
+
 @client.command()
 async def unlink(ctx):
   try:
@@ -194,16 +204,6 @@ async def unlink(ctx):
     embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的[使用者設定](https://twitter.com/settings/connected_apps)中移除此應用程式的權限。", color=0x3983f2)
     await ctx.send(embed=embed)
 
-@slash.slash(description="綁定推特帳號")
-async def link(ctx):
-  await ctx.send("Processing...", delete_after = 0.01)
-  if isinstance(ctx.channel, discord.channel.DMChannel):
-    await auth_process(ctx.author)
-  else:
-    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
-    await ctx.channel.send(embed=embed, delete_after = 5.0)
-    await auth_process(ctx.author)
-
 @slash.slash(description="解除綁定推特帳號")
 async def unlink(ctx):
   try:
@@ -217,7 +217,7 @@ async def unlink(ctx):
     async for msg in ctx.author.history():
       if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
         await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的使用者設定中移除此應用程式的權限。", color=0x3983f2)
+    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的[使用者設定](https://twitter.com/settings/connected_apps)中移除此應用程式的權限。", color=0x3983f2)
     await ctx.send(embed=embed)
 
 client.run("OTE3MTIyNDI1MTAyMTYzOTcx.Ya0G0Q.ZgU4NJ3pWFrCoyjNkH8-3M2Ux1Y")
