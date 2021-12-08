@@ -11,7 +11,7 @@ from discord_slash.utils.manage_commands import *
 from discord_components import *
 from itertools import *
 
-client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link"))
+client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link(tc!link)"))
 slash = SlashCommand(client, sync_commands=True)
 
 consumer_key = "QI2PdLu5ewUDlDr41tSsrvzDo"
