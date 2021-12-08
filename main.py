@@ -33,7 +33,7 @@ async def auth_process(channel):
       await message.unpin()
   async for msg in channel.history():
     if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
-      await msg.edit(content = "Twitter User Access Token\n`Access Token cancelled`\n`Access Token Secret cancelled`")
+      await msg.edit(content = "[Cancelled] Twitter User Access Token\n`Access Token cancelled`\n`Access Token Secret cancelled`")
   auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   try:
     embed=discord.Embed(title = "🔗 綁定Twitter帳號", description = f"請前往[Twitter API Authorize]({auth.get_authorization_url()})，登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送至此處。", color=0x3983f2)
@@ -82,8 +82,6 @@ async def on_raw_reaction_add(payload):
           await user.send(embed=link_notify_embed)
         except:
           pass
-      if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) == "🔗":
-        await auth_process(user)
       if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token") and str(payload.emoji) in emoji_list:
         token_list = pins[0].content.split("\n")
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -144,11 +142,21 @@ async def on_raw_reaction_remove(payload):
 @client.event
 async def on_message(message):
   if any(word in message.content for word in twitter_url):
-    reaction_list = ["🔗", "📡", "🔁", "❤️"]
+    reaction_list = ["📡", "🔁", "❤️"]
     for i in reaction_list:
       await message.add_reaction(i)
       await asyncio.sleep(0.3)
   await client.process_commands(message)
+
+@client.command()
+async def ping(ctx):
+  embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
+  await ctx.send(embed=embed)
+
+@slash.slash(description='檢查延遲')
+async def ping(ctx):
+  embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
+  await ctx.send(embed=embed)
 
 @client.command()
 async def link(ctx):
@@ -156,7 +164,7 @@ async def link(ctx):
     await auth_process(ctx.author)
   else:
     embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
-    await ctx.send(embed=embed)
+    await ctx.reply(embed=embed, delete_after = 5.0, mention_author=False)
     await auth_process(ctx.author)
 
 @client.command()
@@ -172,7 +180,32 @@ async def unlink(ctx):
     async for msg in ctx.author.history():
       if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
         await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋。", color=0x3983f2)
+    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的使用者設定中移除此應用程式的權限。", color=0x3983f2)
+    await ctx.send(embed=embed)
+
+@slash.slash(description="綁定推特帳號")
+async def link(ctx):
+  if isinstance(ctx.channel, discord.channel.DMChannel):
+    await auth_process(ctx.author)
+  else:
+    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
+    await ctx.send(embed=embed, delete_after = 5.0)
+    await auth_process(ctx.author)
+
+@slash.slash(description="解除綁定推特帳號")
+async def unlink(ctx):
+  try:
+    pins = await ctx.author.pins()
+  except:
+    pass
+  else:
+    if len(pins) != 0:
+      for message in pins:
+        await message.unpin()
+    async for msg in ctx.author.history():
+      if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
+        await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
+    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的使用者設定中移除此應用程式的權限。", color=0x3983f2)
     await ctx.send(embed=embed)
 
 client.run("OTE3MTIyNDI1MTAyMTYzOTcx.Ya0G0Q.ZgU4NJ3pWFrCoyjNkH8-3M2Ux1Y")
