@@ -86,7 +86,7 @@ async def on_raw_reaction_add(payload):
     user = client.get_user(int(payload.user_id))
     if user != client.user:
       pins = await user.pins()
-      link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link to your Twitter account, then you can use Discord reactions to like, retweet and follow users.", color=0x3983f2)
+      link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link to your Twitter account, then you can use Discord reactions to like, retweet, and follow users.", color=0x3983f2)
       if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) in emoji_list:
         try:
           await user.send(embed=link_notify_embed)
