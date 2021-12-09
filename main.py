@@ -10,7 +10,7 @@ from dotenv import *
 from discord_slash import *
 from discord_slash.utils.manage_commands import *
 
-client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link(tc!link)"))
+client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link"))
 slash = SlashCommand(client, sync_commands=True)
 load_dotenv()
 
@@ -47,7 +47,7 @@ async def auth_process(channel):
       await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
   auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   try:
-    embed=discord.Embed(title = "🔗 綁定Twitter帳號", description = f"請前往[Twitter API Authorize]({auth.get_authorization_url()})，登入並點擊\"Authorize app\"後，於60秒內將驗證PIN碼發送至此處。", color=0x3983f2)
+    embed=discord.Embed(title = "🔗 Link Your Twitter Account", description = f"Please go to [Twitter API Authorize]({auth.get_authorization_url()}), click on \"Authorize app\", then send the verification PIN code here within 60 seconds.", color=0x3983f2)
     auth_msg = await channel.send(embed=embed)
   except:
     pass
@@ -57,18 +57,18 @@ async def auth_process(channel):
     try:
       pin_code_msg = await client.wait_for(event="message", check=check, timeout=75.0)
     except asyncio.TimeoutError:
-      embed=discord.Embed(title = "⚠️ 操作失敗", description = "等候逾時，請重新嘗試。", color=0xeca42c)
+      embed=discord.Embed(title = "⚠️ Link Failed", description = "Authorization timeout, please try again.", color=0xeca42c)
       embed.set_footer(text="ERR_TIMEOUT")
       await channel.send(embed=embed)
     else:
       try:
         auth.get_access_token(pin_code_msg.content)
       except:
-        embed=discord.Embed(title = "⚠️ 操作失敗", description = "綁定失敗，憑證遭拒。", color=0xeca42c)
+        embed=discord.Embed(title = "⚠️ Link Failed", description = "Unauthorized PIN code.", color=0xeca42c)
         embed.set_footer(text="ERR_UNAUTHORIZED")
         await channel.send(embed=embed)
       else:
-        embed=discord.Embed(title = "✅ 綁定成功", description = "為確保你的資訊安全，機器人不會儲存你的資料，而是在你進行反應時從私人訊息釘選抓取金鑰，請不要隨意釘選/解釘訊息。\n\n你隨時可以透過`/link`(`tc!unlink`)註銷。\n\n**如因Discord帳號遭盜用導致資料外洩，開發者不負任何責任，請自行承擔損失。**", color=0x3983f2)
+        embed=discord.Embed(title = "✅ Account Linked", description = "You can unlink your account by using `/unlink`(`tc!unlink`) at any time.", color=0x3983f2)
         await channel.send(embed=embed)
         token_msg = await channel.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
         await token_msg.pin()
@@ -86,7 +86,7 @@ async def on_raw_reaction_add(payload):
     user = client.get_user(int(payload.user_id))
     if user != client.user:
       pins = await user.pins()
-      link_notify_embed=discord.Embed(title = "ℹ️ 你尚未綁定Twitter帳號", description = f"輸入`/link`(`tc!link`)來綁定Twitter帳號，方可使用Discord反應來喜歡、轉推或追蹤作者。", color=0x3983f2)
+      link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link to your Twitter account, then you can use Discord reactions to like, retweet and follow users.", color=0x3983f2)
       if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) in emoji_list:
         try:
           await user.send(embed=link_notify_embed)
@@ -163,29 +163,19 @@ async def ping(ctx):
   embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
   await ctx.send(embed=embed)
 
-@slash.slash(description='檢查延遲')
+@slash.slash(description='Shows current ping')
 async def ping(ctx):
   embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
   await ctx.send(embed=embed)
 
 @client.command()
 async def link(ctx):
-  if isinstance(ctx.channel, discord.channel.DMChannel):
-    await auth_process(ctx.author)
-  else:
-    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
-    await ctx.reply(embed=embed, delete_after = 5.0, mention_author=False)
-    await auth_process(ctx.author)
+  await auth_process(ctx.author)
 
-@slash.slash(description="綁定推特帳號")
+@slash.slash(description="Link your Twitter account")
 async def link(ctx):
   await ctx.send("Processing...", delete_after = 0.01)
-  if isinstance(ctx.channel, discord.channel.DMChannel):
-    await auth_process(ctx.author)
-  else:
-    embed=discord.Embed(title = "ℹ️ 前往私人訊息以繼續", description = f"為保護你的資料安全，請於私人訊息完成綁定。", color=0x3983f2)
-    await ctx.channel.send(embed=embed, delete_after = 5.0)
-    await auth_process(ctx.author)
+  await auth_process(ctx.author)
 
 @client.command()
 async def unlink(ctx):
@@ -200,10 +190,10 @@ async def unlink(ctx):
     async for msg in ctx.author.history():
       if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
         await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的[使用者設定](https://twitter.com/settings/connected_apps)中移除此應用程式的權限。", color=0x3983f2)
+    embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
     await ctx.send(embed=embed)
 
-@slash.slash(description="解除綁定推特帳號")
+@slash.slash(description="Unlink your Twitter account")
 async def unlink(ctx):
   try:
     pins = await ctx.author.pins()
@@ -216,7 +206,7 @@ async def unlink(ctx):
     async for msg in ctx.author.history():
       if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
         await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-    embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的[使用者設定](https://twitter.com/settings/connected_apps)中移除此應用程式的權限。", color=0x3983f2)
+    embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
     await ctx.send(embed=embed)
 
 client.run(os.getenv("TOKEN"))
