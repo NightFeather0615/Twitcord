@@ -1,22 +1,22 @@
 import discord
-from discord import activity
-from discord.ext import commands, tasks
+from discord.ext import commands
 import datetime
 import os
 import json
 import requests
 import tweepy
+import dotenv
+from dotenv import *
 from discord_slash import *
 from discord_slash.utils.manage_commands import *
-from discord_components import *
-from itertools import *
 
 client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link(tc!link)"))
 slash = SlashCommand(client, sync_commands=True)
+load_dotenv()
 
-consumer_key = "QI2PdLu5ewUDlDr41tSsrvzDo"
-consumer_secret="EzP5PtU5omjlTAHS71jF20m9KhifyZwbOxGpso5wnQMgV4olSz"
-bearer_token = "AAAAAAAAAAAAAAAAAAAAAGZGWgEAAAAAnoGIiO%2B4fAh2BQC0Vc2yGw8uEmA%3DEWgL9g7KNbn5N7eyZd3v4JoZhbwKeFL8wOw3LvrCt8sYcHXkCE"
+consumer_key = os.getenv("CONSUMER_KEY")
+consumer_secret = os.getenv("CONSUMER_SECRET")
+bearer_token = os.getenv("BEARER_TOKEN")
 twitter_url = ["https://twitter.com", "https://fxtwitter.com"]
 
 def get_id_from_url(tweet_url):
@@ -76,7 +76,6 @@ async def auth_process(channel):
 @client.event
 async def on_ready():
   client.uptime = datetime.datetime.utcnow()
-  DiscordComponents(client)
   print('<Logged in as {0.user}>'.format(client))
 
 @client.event
@@ -220,4 +219,4 @@ async def unlink(ctx):
     embed=discord.Embed(title = "✅ 註銷成功", description = "已將所有包含使用者授權金鑰的訊息覆蓋，你可以在Twitter的[使用者設定](https://twitter.com/settings/connected_apps)中移除此應用程式的權限。", color=0x3983f2)
     await ctx.send(embed=embed)
 
-client.run("OTE3MTIyNDI1MTAyMTYzOTcx.Ya0G0Q.ZgU4NJ3pWFrCoyjNkH8-3M2Ux1Y")
+client.run(os.getenv("TOKEN"))
