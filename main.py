@@ -20,35 +20,40 @@ bearer_token = os.getenv("BEARER_TOKEN")
 twitter_url = ["https://twitter.com", "https://fxtwitter.com"]
 
 def get_id_from_url(tweet_url):
-  tweet_url = tweet_url.split("https://")
-  if len(tweet_url) == 2:
-      tweet_url = tweet_url[1].split("twitter.com")
-      if len(tweet_url) == 2:
-          tweet_url = tweet_url[1].split("/")[3::3]
-          tweet_url = tweet_url[0].split("?")[::]
-          tweet_id = tweet_url[0]
-          return tweet_id
-      else:
-          tweet_url = tweet_url[1].split("fxtwitter.com")
-          tweet_url = tweet_url[1].split("/")[3::3]
-          tweet_url = tweet_url[0].split("?")[::]
-          tweet_id = tweet_url[0]
-          return tweet_id
-  else:
+  try:
+    tweet_url = tweet_url.split("https://")
+    if len(tweet_url) == 2:
+        tweet_url = tweet_url[1].split("twitter.com")
+        if len(tweet_url) == 2:
+            tweet_url = tweet_url[1].split("/")[3::3]
+            tweet_url = tweet_url[0].split("?")[::]
+            tweet_id = tweet_url[0]
+            return tweet_id
+        else:
+            tweet_url = tweet_url[1].split("fxtwitter.com")
+            tweet_url = tweet_url[1].split("/")[3::3]
+            tweet_url = tweet_url[0].split("?")[::]
+            tweet_id = tweet_url[0]
+            return tweet_id
+    else:
+      return None
+  except:
     return None
 
-async def auth_process(channel):
-  pins = await channel.pins()
+async def auth_process(user, catch_message = None):
+  pins = await user.pins()
   if len(pins) != 0:
     for message in pins:
       await message.unpin()
-  async for msg in channel.history():
+  async for msg in user.history():
     if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
       await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
+  if catch_message != None:
+    await catch_message.delete()
   auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   try:
     embed=discord.Embed(title = "🔗 Link Your Twitter Account", description = f"Please go to [Twitter API Authorize]({auth.get_authorization_url()}), click on \"Authorize app\", then send the verification PIN code here within 60 seconds.", color=0x3983f2)
-    auth_msg = await channel.send(embed=embed)
+    auth_msg = await user.send(embed=embed)
   except:
     pass
   else:
@@ -59,19 +64,32 @@ async def auth_process(channel):
     except asyncio.TimeoutError:
       embed=discord.Embed(title = "⚠️ Link Failed", description = "Authorization timeout, please try again.", color=0xeca42c)
       embed.set_footer(text="ERR_TIMEOUT")
-      await channel.send(embed=embed)
+      await user.send(embed=embed)
     else:
       try:
         auth.get_access_token(pin_code_msg.content)
       except:
         embed=discord.Embed(title = "⚠️ Link Failed", description = "Unauthorized PIN code.", color=0xeca42c)
         embed.set_footer(text="ERR_UNAUTHORIZED")
-        await channel.send(embed=embed)
+        await user.send(embed=embed)
       else:
         embed=discord.Embed(title = "✅ Account Linked", description = "You can unlink your account by using `/unlink`(`tc!unlink`) at any time.", color=0x3983f2)
-        await channel.send(embed=embed)
-        token_msg = await channel.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
+        await user.send(embed=embed)
+        token_msg = await user.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
         await token_msg.pin()
+
+async def unlink_process(user, catch_message = None):
+  pins = await user.pins()
+  if len(pins) != 0:
+    for message in pins:
+      await message.unpin()
+  async for msg in user.history():
+    if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
+      await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
+  if catch_message != None:
+    await catch_message.delete()
+  embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
+  await user.send(embed=embed)
 
 @client.event
 async def on_ready():
@@ -163,7 +181,7 @@ async def ping(ctx):
   embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
   await ctx.send(embed=embed)
 
-@slash.slash(description='Shows current ping')
+@slash.slash(description="Shows current ping")
 async def ping(ctx):
   embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
   await ctx.send(embed=embed)
@@ -174,39 +192,16 @@ async def link(ctx):
 
 @slash.slash(description="Link your Twitter account")
 async def link(ctx):
-  await ctx.send("Processing...", delete_after = 0.01)
-  await auth_process(ctx.author)
+  catch_message = await ctx.send("Processing...")
+  await auth_process(ctx.author, catch_message)
 
 @client.command()
 async def unlink(ctx):
-  try:
-    pins = await ctx.author.pins()
-  except:
-    pass
-  else:
-    if len(pins) != 0:
-      for message in pins:
-        await message.unpin()
-    async for msg in ctx.author.history():
-      if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
-        await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-    embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
-    await ctx.send(embed=embed)
+  await unlink_process(ctx.author)
 
 @slash.slash(description="Unlink your Twitter account")
 async def unlink(ctx):
-  try:
-    pins = await ctx.author.pins()
-  except:
-    pass
-  else:
-    if len(pins) != 0:
-      for message in pins:
-        await message.unpin()
-    async for msg in ctx.author.history():
-      if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
-        await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-    embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
-    await ctx.send(embed=embed)
+  catch_message = await ctx.send("Processing...")
+  await unlink_process(ctx.author, catch_message)
 
 client.run(os.getenv("TOKEN"))
