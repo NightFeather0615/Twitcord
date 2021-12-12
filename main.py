@@ -91,6 +91,27 @@ async def unlink_process(user, catch_message = None):
   embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
   await user.send(embed=embed)
 
+async def create_tweet_process(ctx, text):
+  user = ctx.author
+  if user != client.user:
+    pins = await user.pins()
+    link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.", color=0x3983f2)
+    if len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False:
+      try:
+        await ctx.send(embed=link_notify_embed)
+      except:
+        pass
+    if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token"):
+      token_list = pins[0].content.split("\n")
+      auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+      access_token = token_list[1].replace("`", "").replace("||", "")
+      access_token_secret = token_list[2].replace("`", "").replace("||", "")
+      auth.set_access_token(access_token, access_token_secret)
+      twitter_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+      new_tweet = twitter_client.create_tweet(text=text)
+      tweet = twitter_client.get_tweet(new_tweet.data['id'], expansions='author_id')
+      await ctx.send(f"https://twitter.com/{tweet.includes['users'][0].username}/status/{new_tweet.data['id']}")
+
 @client.event
 async def on_ready():
   client.uptime = datetime.datetime.utcnow()
@@ -104,7 +125,7 @@ async def on_raw_reaction_add(payload):
     user = client.get_user(int(payload.user_id))
     if user != client.user:
       pins = await user.pins()
-      link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can use Discord reactions to like, retweet, and follow users.", color=0x3983f2)
+      link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.", color=0x3983f2)
       if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) in emoji_list:
         try:
           await user.send(embed=link_notify_embed)
@@ -149,21 +170,21 @@ async def on_raw_reaction_remove(payload):
           access_token = token_list[1].replace("`", "").replace("||", "")
           access_token_secret = token_list[2].replace("`", "").replace("||", "")
           auth.set_access_token(access_token, access_token_secret)
-          tp_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+          twitter_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
           if str(payload.emoji) == "❤️":
             try:
-              tp_client.unlike(get_id_from_url(message.content))
+              twitter_client.unlike(get_id_from_url(message.content))
             except:
               pass
           if str(payload.emoji) == "🔁":
             try:
-              tp_client.unretweet(get_id_from_url(message.content))
+              twitter_client.unretweet(get_id_from_url(message.content))
             except:
               pass
           if str(payload.emoji) == "📡":
             try:
-              tweet = tp_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
-              tp_client.unfollow_user(tweet.includes['users'][0].id)
+              tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+              twitter_client.unfollow_user(tweet.includes['users'][0].id)
             except:
               pass
 
@@ -203,5 +224,13 @@ async def unlink(ctx):
 async def unlink(ctx):
   catch_message = await ctx.send("Processing...")
   await unlink_process(ctx.author, catch_message)
+
+@client.command()
+async def tweet(ctx, *, text):
+  await create_tweet_process(ctx, text)
+
+@slash.slash(description="Create new tweet")
+async def tweet(ctx, *, text):
+  await create_tweet_process(ctx, text)
 
 client.run(os.getenv("TOKEN"))
