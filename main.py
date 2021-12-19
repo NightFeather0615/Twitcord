@@ -12,7 +12,6 @@ from discord_slash.utils.manage_commands import *
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import *
-import numpy as np
 
 client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link"))
 slash = SlashCommand(client, sync_commands=True)
