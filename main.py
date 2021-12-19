@@ -9,6 +9,10 @@ import dotenv
 from dotenv import *
 from discord_slash import *
 from discord_slash.utils.manage_commands import *
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib import *
+import numpy as np
 
 client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link"))
 slash = SlashCommand(client, sync_commands=True)
@@ -112,6 +116,41 @@ async def create_tweet_process(ctx, text):
       tweet = twitter_client.get_tweet(new_tweet.data['id'], expansions='author_id')
       await ctx.send(f"https://twitter.com/{tweet.includes['users'][0].username}/status/{new_tweet.data['id']}")
 
+async def ping_calc(ctx, msg, index):
+  time_elsp = []
+  ping_rec = []
+  file_id = (str(datetime.datetime.now().timestamp()) + str(ctx.author.id) + str(ctx.channel.id)).replace(".", "")
+  start_time = datetime.datetime.now().strftime('%H:%M:%S')
+  for i in range(1, index+1):
+    time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
+    ping_rec.append(round(client.latency * 1000, 1))
+    loading_dot = "." + "." * int(i % 3) + " " * int(5 - (i % 3))
+    progress = ("■" * round(i/index*10)) + ("□" * (10 - round(i/index*10)))
+    await msg.edit(content = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%")
+    await asyncio.sleep(1)
+  end_time = time_elsp[index-1]
+  max_ping = max(ping_rec)
+  min_ping = min(ping_rec)
+  avg_ping = round(sum(ping_rec) / index, 1)
+  fig = plt.figure(figsize=(20, 10), facecolor="#303340")
+  ax = plt.subplot(1,1,1)
+  ax.plot(time_elsp, ping_rec, 'o-', c="#ffffff", markeredgecolor="#ffffff")
+  ax.set_facecolor("#303340")
+  ax.tick_params(axis = "x", colors="#3983f2", rotation=270)
+  ax.tick_params(axis = "y", colors="#3983f2")
+  ax.yaxis.grid(linestyle="--", linewidth = 0.5)
+  ax.set_axisbelow(True)
+  for pos in ['top', 'right', 'bottom', 'left']:
+    ax.spines[pos].set_visible(False)
+  fig = plt.gcf()
+  plt.savefig(f"./catch/{file_id}.png")
+  file = discord.File(f"./catch/{file_id}.png", filename="image.png")
+  await msg.delete()
+  embed = discord.Embed(title=f"Ping record from {start_time} to {end_time}", description=f"Max: {max_ping} | Min: {min_ping} | Avg: {avg_ping}", color=0x3983f2)
+  embed.set_image(url=f"attachment://image.png")
+  await ctx.channel.send(embed=embed, file=file)
+  os.remove(f"./catch/{file_id}.png")
+
 @client.event
 async def on_ready():
   client.uptime = datetime.datetime.utcnow()
@@ -198,14 +237,14 @@ async def on_message(message):
   await client.process_commands(message)
 
 @client.command()
-async def ping(ctx):
-  embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
-  await ctx.send(embed=embed)
+async def ping(ctx, index=10):
+  msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
+  await ping_calc(ctx, msg, index)
 
 @slash.slash(description="Shows current ping")
-async def ping(ctx):
-  embed = discord.Embed(title=":ping_pong: Pong!", description=f"`{round(client.latency * 1000, 1)} ms`", color=0x3983f2)
-  await ctx.send(embed=embed)
+async def ping(ctx, index=10):
+  msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
+  await ping_calc(ctx, msg, index)
 
 @client.command()
 async def link(ctx):
