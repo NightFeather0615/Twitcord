@@ -145,11 +145,11 @@ async def ping_calc(ctx, msg, index):
   plt.savefig(f"./catch/{file_id}.png")
   file = discord.File(f"./catch/{file_id}.png", filename="image.png")
   await msg.delete()
-  embed = discord.Embed(title=f"Ping record from {start_time} to {end_time}", description=f"Max: {max_ping} | Min: {min_ping} | Avg: {avg_ping}", color=0x3983f2)
+  embed = discord.Embed(title=f"Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} | Min: {min_ping} | Avg: {avg_ping}", color=0x3983f2)
   embed.set_image(url=f"attachment://image.png")
+  embed.set_footer(f"Requested by {ctx.author.name}#{ctx.author.discriminator}")
   await ctx.channel.send(embed=embed, file=file)
   os.remove(f"./catch/{file_id}.png")
-
 
 @client.event
 async def on_ready():
@@ -246,7 +246,7 @@ async def ping(ctx, index:int=10):
     embed.set_footer(text="ERR_INVALIDVALUE")
     await ctx.send(embed=embed)
 
-@slash.slash(description="Shows current ping")
+@slash.slash(description="Track bot latency")
 async def ping(ctx, index:int=10):
   if 0 < index <= 60:
     msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
