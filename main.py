@@ -147,7 +147,7 @@ async def ping_calc(ctx, msg, index):
   await msg.delete()
   embed = discord.Embed(title=f"Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} | Min: {min_ping} | Avg: {avg_ping}", color=0x3983f2)
   embed.set_image(url=f"attachment://image.png")
-  embed.set_footer(f"Requested by {ctx.author.name}#{ctx.author.discriminator}")
+  embed.set_footer(text=f"Requested by {ctx.author.name}#{ctx.author.discriminator}")
   await ctx.channel.send(embed=embed, file=file)
   os.remove(f"./catch/{file_id}.png")
 
