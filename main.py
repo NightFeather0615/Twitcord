@@ -30,13 +30,13 @@ def get_id_from_url(tweet_url):
         if len(tweet_url) == 2:
             tweet_url = tweet_url[1].split("/")[3::3]
             tweet_url = tweet_url[0].split("?")[::]
-            tweet_id = tweet_url[0]
+            tweet_id = tweet_url[0].split(" ")[0]
             return tweet_id
         else:
             tweet_url = tweet_url[1].split("fxtwitter.com")
             tweet_url = tweet_url[1].split("/")[3::3]
             tweet_url = tweet_url[0].split("?")[::]
-            tweet_id = tweet_url[0]
+            tweet_id = tweet_url[0].split(" ")[0]
             return tweet_id
     else:
       return None
