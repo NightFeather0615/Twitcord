@@ -237,7 +237,7 @@ async def on_message(message):
   await client.process_commands(message)
 
 @client.command()
-async def ping(ctx, index=10):
+async def ping(ctx, index:int=10):
   if 0 < index <= 60:
     msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
     await ping_calc(ctx, msg, index)
@@ -247,7 +247,7 @@ async def ping(ctx, index=10):
     await ctx.send(embed=embed)
 
 @slash.slash(description="Shows current ping")
-async def ping(ctx, index=10):
+async def ping(ctx, index:int=10):
   if 0 < index <= 60:
     msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
     await ping_calc(ctx, msg, index)
