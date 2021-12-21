@@ -4,6 +4,7 @@ import datetime
 import os
 import json
 import requests
+import time
 import tweepy
 import dotenv
 from dotenv import *
@@ -121,11 +122,13 @@ async def ping_calc(ctx, msg, index):
   file_id = (str(datetime.datetime.now().timestamp()) + str(ctx.author.id) + str(ctx.channel.id)).replace(".", "")
   start_time = datetime.datetime.now().strftime('%H:%M:%S')
   for i in range(1, index+1):
-    time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
-    ping_rec.append(round(client.latency * 1000, 1))
     loading_dot = "." + "." * int(i % 3) + " " * int(5 - (i % 3))
     progress = ("■" * round(i/index*10)) + ("□" * (10 - round(i/index*10)))
+    time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
+    before = time.monotonic()
     await msg.edit(content = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%")
+    ping = time.monotonic() - before
+    ping_rec.append(round(ping * 1000, 1))
     await asyncio.sleep(1)
   end_time = time_elsp[index-1]
   max_ping = max(ping_rec)
@@ -145,7 +148,7 @@ async def ping_calc(ctx, msg, index):
   plt.savefig(f"./catch/{file_id}.png")
   file = discord.File(f"./catch/{file_id}.png", filename="image.png")
   await msg.delete()
-  embed = discord.Embed(title=f"Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} ms | Min: {min_ping} ms | Avg: {avg_ping} ms", color=0x3983f2)
+  embed = discord.Embed(title=f"📑 Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} ms | Min: {min_ping} ms | Avg: {avg_ping} ms", color=0x3983f2)
   embed.set_image(url=f"attachment://image.png")
   embed.set_footer(text=f"Requested by {ctx.author.name}#{ctx.author.discriminator}")
   await ctx.channel.send(embed=embed, file=file)
@@ -235,6 +238,16 @@ async def on_message(message):
       await message.add_reaction(i)
       await asyncio.sleep(0.3)
   await client.process_commands(message)
+
+@client.command()
+async def invite(ctx):
+  embed=discord.Embed(title = "", description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!", color=0x3983f2)
+  await ctx.send(embed=embed)
+
+@slash.slash(description="Show invite link")
+async def invite(ctx):
+  embed=discord.Embed(title = "", description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!", color=0x3983f2)
+  await ctx.send(embed=embed)
 
 @client.command()
 async def ping(ctx, index:int=10):
