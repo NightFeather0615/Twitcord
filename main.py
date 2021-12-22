@@ -293,7 +293,7 @@ async def tweet(ctx, *, text: str=None):
   if text != None:
     await create_tweet_process(ctx, text)
   else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.\n`tc!tweet <content>`", color=0xeca42c)
     embed.set_footer(text="ERR_MISSINGARGUMENT")
     await ctx.send(embed=embed)
 
@@ -302,7 +302,7 @@ async def tweet(ctx, *, text: str):
   if text != None:
     await create_tweet_process(ctx, text)
   else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.\n`tc!tweet <content>`", color=0xeca42c)
     embed.set_footer(text="ERR_MISSINGARGUMENT")
     await ctx.send(embed=embed)
 
