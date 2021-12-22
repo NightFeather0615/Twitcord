@@ -252,7 +252,8 @@ async def invite(ctx):
   await ctx.send(embed=embed)
 
 @client.command()
-async def ping(ctx, index=10):
+async def ping(ctx, index=None):
+  if index == None: index = 10
   if type(index) == int:
     if 0 < index <= 60:
       msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
