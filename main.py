@@ -16,6 +16,7 @@ from matplotlib import *
 
 client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | /link"))
 slash = SlashCommand(client, sync_commands=True)
+client.remove_command("help")
 load_dotenv()
 
 consumer_key = os.getenv("CONSUMER_KEY")
