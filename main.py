@@ -256,7 +256,7 @@ async def ping(ctx, index:int=10):
     msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
     await ping_calc(ctx, msg, index)
   else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).", color=0xeca42c)
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`tc!ping <index(1~60)>`", color=0xeca42c)
     embed.set_footer(text="ERR_INVALIDVALUE")
     await ctx.send(embed=embed)
 
@@ -266,7 +266,7 @@ async def ping(ctx, index:int=10):
     msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
     await ping_calc(ctx, msg, index)
   else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).", color=0xeca42c)
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`/ping <index(1~60)>`", color=0xeca42c)
     embed.set_footer(text="ERR_INVALIDVALUE")
     await ctx.send(embed=embed)
     
@@ -302,7 +302,7 @@ async def tweet(ctx, *, text: str):
   if text != None:
     await create_tweet_process(ctx, text)
   else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.\n`tc!tweet <content>`", color=0xeca42c)
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.\n`/tweet <content>`", color=0xeca42c)
     embed.set_footer(text="ERR_MISSINGARGUMENT")
     await ctx.send(embed=embed)
 
