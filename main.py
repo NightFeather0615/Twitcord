@@ -252,13 +252,18 @@ async def invite(ctx):
   await ctx.send(embed=embed)
 
 @client.command()
-async def ping(ctx, index:int=10):
-  if 0 < index <= 60:
-    msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
-    await ping_calc(ctx, msg, index)
+async def ping(ctx, index=10):
+  if type(index) == int:
+    if 0 < index <= 60:
+      msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
+      await ping_calc(ctx, msg, index)
+    else:
+      embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`tc!ping <index(1~60)>`", color=0xeca42c)
+      embed.set_footer(text="ERR_INVALIDVALUE")
+      await ctx.send(embed=embed)
   else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`tc!ping <index(1~60)>`", color=0xeca42c)
-    embed.set_footer(text="ERR_INVALIDVALUE")
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Invalid integer.\n`tc!ping <index(1~60)>`", color=0xeca42c)
+    embed.set_footer(text="ERR_BADARGUMENT")
     await ctx.send(embed=embed)
 
 @slash.slash(description="Track bot latency")
