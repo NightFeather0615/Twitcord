@@ -289,11 +289,21 @@ async def unlink(ctx):
   await unlink_process(ctx.author, catch_message)
 
 @client.command()
-async def tweet(ctx, *, text):
-  await create_tweet_process(ctx, text)
+async def tweet(ctx, *, text: str):
+  if text != "":
+    await create_tweet_process(ctx, text)
+  else:
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
+    embed.set_footer(text="ERR_MISSINGARGUMENT")
+    await ctx.send(embed=embed)
 
 @slash.slash(description="Create new tweet")
-async def tweet(ctx, *, text):
-  await create_tweet_process(ctx, text)
+async def tweet(ctx, *, text: str):
+  if text != "":
+    await create_tweet_process(ctx, text)
+  else:
+    embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
+    embed.set_footer(text="ERR_MISSINGARGUMENT")
+    await ctx.send(embed=embed)
 
 client.run(os.getenv("TOKEN"))
