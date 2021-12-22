@@ -3,7 +3,6 @@ from discord.ext import commands
 import datetime
 import os
 import json
-from discord.ext.commands.errors import MissingRequiredArgument
 import requests
 import time
 import tweepy
@@ -290,19 +289,19 @@ async def unlink(ctx):
   await unlink_process(ctx.author, catch_message)
 
 @client.command()
-async def tweet(ctx, *, text: str):
-  try:
+async def tweet(ctx, *, text: str=None):
+  if text != None:
     await create_tweet_process(ctx, text)
-  except MissingRequiredArgument:
+  else:
     embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
     embed.set_footer(text="ERR_MISSINGARGUMENT")
     await ctx.send(embed=embed)
 
 @slash.slash(description="Create new tweet")
-async def tweet(ctx, *, text=None):
-  try:
+async def tweet(ctx, *, text: str):
+  if text != None:
     await create_tweet_process(ctx, text)
-  except MissingRequiredArgument:
+  else:
     embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
     embed.set_footer(text="ERR_MISSINGARGUMENT")
     await ctx.send(embed=embed)
