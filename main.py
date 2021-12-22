@@ -124,11 +124,12 @@ async def ping_calc(ctx, msg, index):
   for i in range(1, index+1):
     loading_dot = "." + "." * int(i % 3) + " " * int(5 - (i % 3))
     progress = ("■" * round(i/index*10)) + ("□" * (10 - round(i/index*10)))
+    loading_animation = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%"
     time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
     before = time.monotonic()
-    await msg.edit(content = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%")
-    ping = time.monotonic() - before
-    ping_rec.append(round(ping * 1000, 1))
+    await msg.edit(content = loading_animation)
+    after = time.monotonic()
+    ping_rec.append(round((after - before) * 1000, 1))
     await asyncio.sleep(1)
   end_time = time_elsp[index-1]
   max_ping = max(ping_rec)
@@ -150,7 +151,7 @@ async def ping_calc(ctx, msg, index):
   await msg.delete()
   embed = discord.Embed(title=f"📑 Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} ms | Min: {min_ping} ms | Avg: {avg_ping} ms", color=0x3983f2)
   embed.set_image(url=f"attachment://image.png")
-  embed.set_footer(text=f"Requested by {ctx.author.name}#{ctx.author.discriminator}")
+  embed.set_footer(text=f"Request by {ctx.author.name}#{ctx.author.discriminator}")
   await ctx.channel.send(embed=embed, file=file)
   os.remove(f"./catch/{file_id}.png")
 
