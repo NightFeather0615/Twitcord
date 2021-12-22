@@ -290,7 +290,7 @@ async def unlink(ctx):
 
 @client.command()
 async def tweet(ctx, *, text: str):
-  if text != "":
+  if text != None:
     await create_tweet_process(ctx, text)
   else:
     embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
@@ -299,7 +299,7 @@ async def tweet(ctx, *, text: str):
 
 @slash.slash(description="Create new tweet")
 async def tweet(ctx, *, text: str):
-  if text != "":
+  if text != None:
     await create_tweet_process(ctx, text)
   else:
     embed=discord.Embed(title = "⚠️ Command Failed", description = "Missing required argument.", color=0xeca42c)
