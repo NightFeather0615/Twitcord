@@ -1,3 +1,4 @@
+from asyncio.events import get_child_watcher
 import discord
 from discord.ext import commands
 import datetime
@@ -99,23 +100,10 @@ async def unlink_process(user, catch_message = None):
 async def create_tweet_process(ctx, text):
   user = ctx.author
   if user != client.user:
-    pins = await user.pins()
-    link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.", color=0x3983f2)
-    if len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False:
-      try:
-        await ctx.send(embed=link_notify_embed)
-      except:
-        pass
-    if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token"):
-      token_list = pins[0].content.split("\n")
-      auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-      access_token = token_list[1].replace("`", "").replace("||", "")
-      access_token_secret = token_list[2].replace("`", "").replace("||", "")
-      auth.set_access_token(access_token, access_token_secret)
-      twitter_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
-      new_tweet = twitter_client.create_tweet(text=text)
-      tweet = twitter_client.get_tweet(new_tweet.data['id'], expansions='author_id')
-      await ctx.send(f"https://twitter.com/{tweet.includes['users'][0].username}/status/{new_tweet.data['id']}")
+    twitter_client = await get_twitter_client(user, True)
+    new_tweet = twitter_client.create_tweet(text=text)
+    tweet = twitter_client.get_tweet(new_tweet.data['id'], expansions='author_id')
+    await ctx.send(f"https://twitter.com/{tweet.includes['users'][0].username}/status/{new_tweet.data['id']}")
 
 async def ping_calc(ctx, msg, index):
   time_elsp = []
@@ -156,6 +144,22 @@ async def ping_calc(ctx, msg, index):
   await ctx.channel.send(embed=embed, file=file)
   os.remove(f"./catch/{file_id}.png")
 
+async def get_twitter_client(user, notify:bool):
+  pins = await user.pins()
+  link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.", color=0x3983f2)
+  if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and notify == True:
+    try:
+      await user.send(embed=link_notify_embed)
+    except:
+      pass
+  if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token"):
+    token_list = pins[0].content.split("\n")
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    access_token = token_list[1].replace("`", "").replace("||", "")
+    access_token_secret = token_list[2].replace("`", "").replace("||", "")
+    auth.set_access_token(access_token, access_token_secret)
+    return tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+
 @client.event
 async def on_ready():
   client.uptime = datetime.datetime.utcnow()
@@ -164,79 +168,55 @@ async def on_ready():
 @client.event
 async def on_raw_reaction_add(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
-  emoji_list = ["❤️", "🔁", "📡"]
-  if any(word in message.content for word in twitter_url) and get_id_from_url(message.content) != None:
+  if any(word in message.content for word in twitter_url) and get_id_from_url(message.content) != None and str(payload.emoji) in ["❤️", "🔁", "📡"]:
     user = client.get_user(int(payload.user_id))
     if user != client.user:
-      pins = await user.pins()
-      link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.", color=0x3983f2)
-      if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and str(payload.emoji) in emoji_list:
+      twitter_client = await get_twitter_client(user, True)
+      if str(payload.emoji) == "❤️":
         try:
-          await user.send(embed=link_notify_embed)
+          twitter_client.like(get_id_from_url(message.content))
         except:
           pass
-      if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token") and str(payload.emoji) in emoji_list:
-        token_list = pins[0].content.split("\n")
-        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-        access_token = token_list[1].replace("`", "").replace("||", "")
-        access_token_secret = token_list[2].replace("`", "").replace("||", "")
-        auth.set_access_token(access_token, access_token_secret)
-        twitter_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
-        if str(payload.emoji) == "❤️":
-          try:
-            twitter_client.like(get_id_from_url(message.content))
-          except:
-            pass
-        if str(payload.emoji) == "🔁":
-          try:
-            twitter_client.retweet(get_id_from_url(message.content))
-          except:
-            pass
-        if str(payload.emoji) == "📡":
-          try:
-            tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
-            twitter_client.follow_user(tweet.includes['users'][0].id)
-          except:
-            pass
+      if str(payload.emoji) == "🔁":
+        try:
+          twitter_client.retweet(get_id_from_url(message.content))
+        except:
+          pass
+      if str(payload.emoji) == "📡":
+        try:
+          tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+          twitter_client.follow_user(tweet.includes['users'][0].id)
+        except:
+          pass
 
 @client.event
 async def on_raw_reaction_remove(payload):
   message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
-  emoji_list = ["❤️", "🔁", "📡"]
   if any(word in message.content for word in twitter_url):
     user = client.get_user(int(payload.user_id))
     if user != client.user:
-      pins = await user.pins()
-      if len(pins) != 0 and str(payload.emoji) in emoji_list:
-        if pins[0].content.startswith("Twitter User Access Token"):
-          token_list = pins[0].content.split("\n")
-          auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-          access_token = token_list[1].replace("`", "").replace("||", "")
-          access_token_secret = token_list[2].replace("`", "").replace("||", "")
-          auth.set_access_token(access_token, access_token_secret)
-          twitter_client = tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
-          if str(payload.emoji) == "❤️":
-            try:
-              twitter_client.unlike(get_id_from_url(message.content))
-            except:
-              pass
-          if str(payload.emoji) == "🔁":
-            try:
-              twitter_client.unretweet(get_id_from_url(message.content))
-            except:
-              pass
-          if str(payload.emoji) == "📡":
-            try:
-              tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
-              twitter_client.unfollow_user(tweet.includes['users'][0].id)
-            except:
-              pass
+      twitter_client = await get_twitter_client(user, False)
+      if str(payload.emoji) == "❤️":
+        try:
+          twitter_client.unlike(get_id_from_url(message.content))
+        except:
+          pass
+      if str(payload.emoji) == "🔁":
+        try:
+          twitter_client.unretweet(get_id_from_url(message.content))
+        except:
+          pass
+      if str(payload.emoji) == "📡":
+        try:
+          tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+          twitter_client.unfollow_user(tweet.includes['users'][0].id)
+        except:
+          pass
 
 @client.event
 async def on_message(message):
   if any(word in message.content for word in twitter_url) and get_id_from_url(message.content) != None:
-    reaction_list = ["📡", "🔁", "❤️"]
-    for i in reaction_list:
+    for i in ["📡", "🔁", "❤️"]:
       await message.add_reaction(i)
       await asyncio.sleep(0.3)
   await client.process_commands(message)
