@@ -236,7 +236,7 @@ async def on_raw_reaction_remove(payload):
 
 @client.event
 async def on_message(message):
-  if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) != None:
+  if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) != None and client.get_channel(message.channel.id) != None:
     for i in ["📡", "🔁", "❤️"]:
       try:
         await message.add_reaction(i)
