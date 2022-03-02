@@ -132,9 +132,9 @@ async def ping_calc(ctx, msg, index):
     progress = ("■" * round(i/index*10)) + ("□" * (10 - round(i/index*10)))
     loading_animation = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%"
     time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
-    before = time.monotonic()
+    before = time.perf_counter()
     await msg.edit(content = loading_animation)
-    after = time.monotonic()
+    after = time.perf_counter()
     ping_rec.append(round((after - before) * 1000, 1))
     await asyncio.sleep(1)
   end_time = time_elsp[index-1]
