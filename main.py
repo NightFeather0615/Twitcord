@@ -3,11 +3,10 @@ import discord
 from discord.ext import commands
 import datetime
 import os
-import json
-import requests
 import time
 import tweepy
-import dotenv
+import logging
+import sys
 from dotenv import *
 from discord_slash import *
 from discord_slash.utils.manage_commands import *
@@ -15,7 +14,17 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import *
 
-client = commands.Bot(command_prefix='tc!', intents=discord.Intents.all(), activity=discord.Activity(type=discord.ActivityType.watching, name=f"🕊️ | tc!link"))
+
+client = commands.Bot(command_prefix='tc!',
+                      intents=discord.Intents.all(),
+                      activity=discord.Activity(
+                        type=discord.ActivityType.watching,
+                        name=f"🕊️ | tc!link"))
+
+logging.basicConfig(level=logging.INFO,
+                    format='[%(asctime)s] [%(levelname)s] %(message)s',
+                    datefmt='%Y/%m/%d %I:%M:%S')
+
 slash = SlashCommand(client, sync_commands=True)
 client.remove_command("help")
 load_dotenv()
@@ -24,6 +33,27 @@ consumer_key = os.getenv("CONSUMER_KEY")
 consumer_secret = os.getenv("CONSUMER_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
 twitter_urls = ["https://twitter.com", "https://fxtwitter.com"]
+
+@client.event
+async def on_ready():
+  logging.info(f"Logged in as {client.user}")
+
+@client.event
+async def on_error(event):
+  error = sys.exc_info()
+  logging.error(f"Event {event} raised {error[0].__name__}: {error[1]}")
+
+@client.event
+async def on_resumed():
+  logging.info(f"Connection resumed")
+
+@client.event
+async def on_connect():
+  logging.info("Connected to Discord")
+
+@client.event
+async def on_disconnect():
+  logging.warning("Disconnected to Discord")
 
 def get_id_from_url(tweet_url):
   if any(word in tweet_url for word in twitter_urls) and tweet_url.find('status') != -1:
@@ -177,11 +207,6 @@ async def get_twitter_client(user, notify:bool):
     return tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
 
 @client.event
-async def on_ready():
-  client.uptime = datetime.datetime.utcnow()
-  print('<Logged in as {0.user}>'.format(client))
-
-@client.event
 async def on_raw_reaction_add(payload):
   channel = client.get_channel(payload.channel_id)
   if channel != None:
@@ -254,33 +279,33 @@ async def invite(ctx):
   embed=discord.Embed(title = "", description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!", color=0x3983f2)
   await ctx.send(embed=embed)
 
-@client.command()
-async def ping(ctx, index=None):
-  if index == None: index = 10
-  try:
-    index = int(index)
-  except:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Invalid integer.\n`tc!ping <index(1~60)>`", color=0xeca42c)
-    embed.set_footer(text="ERR_BADARGUMENT")
-    await ctx.send(embed=embed)
-  if type(index) == int:
-    if 0 < index <= 60:
-      msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
-      await ping_calc(ctx, msg, index)
-    else:
-      embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`tc!ping <index(1~60)>`", color=0xeca42c)
-      embed.set_footer(text="ERR_INVALIDVALUE")
-      await ctx.send(embed=embed)
+# @client.command()
+# async def ping(ctx, index=None):
+#   if index == None: index = 10
+#   try:
+#     index = int(index)
+#   except:
+#     embed=discord.Embed(title = "⚠️ Command Failed", description = "Invalid integer.\n`tc!ping <index(1~60)>`", color=0xeca42c)
+#     embed.set_footer(text="ERR_BADARGUMENT")
+#     await ctx.send(embed=embed)
+#   if type(index) == int:
+#     if 0 < index <= 60:
+#       msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
+#       await ping_calc(ctx, msg, index)
+#     else:
+#       embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`tc!ping <index(1~60)>`", color=0xeca42c)
+#       embed.set_footer(text="ERR_INVALIDVALUE")
+#       await ctx.send(embed=embed)
 
-@slash.slash(description="Track bot latency")
-async def ping(ctx, index:int=10):
-  if 0 < index <= 60:
-    msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
-    await ping_calc(ctx, msg, index)
-  else:
-    embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`/ping <index(1~60)>`", color=0xeca42c)
-    embed.set_footer(text="ERR_INVALIDVALUE")
-    await ctx.send(embed=embed)
+# @slash.slash(description="Track bot latency")
+# async def ping(ctx, index:int=10):
+#   if 0 < index <= 60:
+#     msg = await ctx.send("Tracking bot latency...   □□□□□□□□□□ 0.0%")
+#     await ping_calc(ctx, msg, index)
+#   else:
+#     embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`/ping <index(1~60)>`", color=0xeca42c)
+#     embed.set_footer(text="ERR_INVALIDVALUE")
+#     await ctx.send(embed=embed)
     
 @client.command()
 async def link(ctx):
