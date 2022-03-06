@@ -2,11 +2,10 @@ from asyncio.events import get_child_watcher
 import discord
 from discord.ext import commands
 import datetime
-import os
+import os, sys
 import time
 import tweepy
 import logging
-import sys
 from dotenv import *
 from discord_slash import *
 from discord_slash.utils.manage_commands import *
@@ -15,7 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib import *
 
 
-client = commands.Bot(command_prefix='tc!',
+client = commands.AutoShardedBot(command_prefix='tc!',
                       intents=discord.Intents.all(),
                       activity=discord.Activity(
                         type=discord.ActivityType.watching,
