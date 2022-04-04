@@ -1,5 +1,4 @@
-# !/usr/bin/python
-# coding:utf-8
+# -*- coding: utf-8 -*-
 
 from asyncio.events import get_child_watcher
 import discord
