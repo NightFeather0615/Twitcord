@@ -11,9 +11,9 @@ import logging
 from dotenv import *
 from discord_slash import *
 from discord_slash.utils.manage_commands import *
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib import *
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
+# from matplotlib import *
 
 
 client = commands.AutoShardedBot(command_prefix='tc!',
@@ -153,44 +153,44 @@ async def unlink_account(user, catch_message = None):
 #     file = discord.File(file_name, filename=file_name)
 #     await user.send(file=file)
 
-async def ping_calc(ctx, msg, index):
-  time_elsp = []
-  ping_rec = []
-  file_id = (str(datetime.datetime.now().timestamp()) + str(ctx.author.id) + str(ctx.channel.id)).replace(".", "")
-  start_time = datetime.datetime.now().strftime('%H:%M:%S')
-  for i in range(1, index+1):
-    loading_dot = "." + "." * int(i % 3) + " " * int(5 - (i % 3))
-    progress = ("■" * round(i/index*10)) + ("□" * (10 - round(i/index*10)))
-    loading_animation = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%"
-    time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
-    before = time.perf_counter()
-    await msg.edit(content = loading_animation)
-    after = time.perf_counter()
-    ping_rec.append(round((after - before) * 1000, 1))
-    await asyncio.sleep(1)
-  end_time = time_elsp[index-1]
-  max_ping = max(ping_rec)
-  min_ping = min(ping_rec)
-  avg_ping = round(sum(ping_rec) / index, 1)
-  fig = plt.figure(figsize=(20, 10), facecolor="#303340")
-  ax = plt.subplot(1,1,1)
-  ax.plot(time_elsp, ping_rec, 'o-', c="#ffffff", markeredgecolor="#ffffff")
-  ax.set_facecolor("#303340")
-  ax.tick_params(axis = "x", colors="#3983f2", rotation=270)
-  ax.tick_params(axis = "y", colors="#3983f2")
-  ax.yaxis.grid(linestyle="--", linewidth = 0.5)
-  ax.set_axisbelow(True)
-  for pos in ['top', 'right', 'bottom', 'left']:
-    ax.spines[pos].set_visible(False)
-  fig = plt.gcf()
-  plt.savefig(f"./catch/{file_id}.png")
-  file = discord.File(f"./catch/{file_id}.png", filename="image.png")
-  await msg.delete()
-  embed = discord.Embed(title=f"📑 Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} ms | Min: {min_ping} ms | Avg: {avg_ping} ms", color=0x3983f2)
-  embed.set_image(url=f"attachment://image.png")
-  embed.set_footer(text=f"Request by {ctx.author.name}#{ctx.author.discriminator}")
-  await ctx.channel.send(embed=embed, file=file)
-  os.remove(f"./catch/{file_id}.png")
+# async def ping_calc(ctx, msg, index):
+#   time_elsp = []
+#   ping_rec = []
+#   file_id = (str(datetime.datetime.now().timestamp()) + str(ctx.author.id) + str(ctx.channel.id)).replace(".", "")
+#   start_time = datetime.datetime.now().strftime('%H:%M:%S')
+#   for i in range(1, index+1):
+#     loading_dot = "." + "." * int(i % 3) + " " * int(5 - (i % 3))
+#     progress = ("■" * round(i/index*10)) + ("□" * (10 - round(i/index*10)))
+#     loading_animation = f"Tracking bot latency{loading_dot}{progress} {round(i/index*100, 1)}%"
+#     time_elsp.append(datetime.datetime.now().strftime('%H:%M:%S'))
+#     before = time.perf_counter()
+#     await msg.edit(content = loading_animation)
+#     after = time.perf_counter()
+#     ping_rec.append(round((after - before) * 1000, 1))
+#     await asyncio.sleep(1)
+#   end_time = time_elsp[index-1]
+#   max_ping = max(ping_rec)
+#   min_ping = min(ping_rec)
+#   avg_ping = round(sum(ping_rec) / index, 1)
+#   fig = plt.figure(figsize=(20, 10), facecolor="#303340")
+#   ax = plt.subplot(1,1,1)
+#   ax.plot(time_elsp, ping_rec, 'o-', c="#ffffff", markeredgecolor="#ffffff")
+#   ax.set_facecolor("#303340")
+#   ax.tick_params(axis = "x", colors="#3983f2", rotation=270)
+#   ax.tick_params(axis = "y", colors="#3983f2")
+#   ax.yaxis.grid(linestyle="--", linewidth = 0.5)
+#   ax.set_axisbelow(True)
+#   for pos in ['top', 'right', 'bottom', 'left']:
+#     ax.spines[pos].set_visible(False)
+#   fig = plt.gcf()
+#   plt.savefig(f"./catch/{file_id}.png")
+#   file = discord.File(f"./catch/{file_id}.png", filename="image.png")
+#   await msg.delete()
+#   embed = discord.Embed(title=f"📑 Latency record from {start_time} to {end_time}", description=f"Max: {max_ping} ms | Min: {min_ping} ms | Avg: {avg_ping} ms", color=0x3983f2)
+#   embed.set_image(url=f"attachment://image.png")
+#   embed.set_footer(text=f"Request by {ctx.author.name}#{ctx.author.discriminator}")
+#   await ctx.channel.send(embed=embed, file=file)
+#   os.remove(f"./catch/{file_id}.png")
 
 async def get_twitter_client(user, notify:bool):
   pins = await user.pins()
