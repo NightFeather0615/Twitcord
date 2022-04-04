@@ -1,3 +1,6 @@
+# !/usr/bin/python
+# coding:utf-8
+
 from asyncio.events import get_child_watcher
 import discord
 from discord.ext import commands
