@@ -1,123 +1,155 @@
-# -*- coding: utf-8 -*-
-
-from asyncio.events import get_child_watcher
-import discord
-from discord.ext import commands
-import datetime
+import nextcord
+from nextcord.ext import commands
+import asyncio
 import os, sys
-import time
 import tweepy
 import logging
-from dotenv import *
-from discord_slash import *
-from discord_slash.utils.manage_commands import *
+from dotenv import load_dotenv
+from typing import Union
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
 # from matplotlib import *
 
 
-client = commands.AutoShardedBot(command_prefix='tc!',
-                      intents=discord.Intents.all(),
-                      activity=discord.Activity(
-                        type=discord.ActivityType.watching,
-                        name=f"🕊️ | tc!link"))
-
-logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s] [%(levelname)s] %(message)s',
-                    datefmt='%Y/%m/%d %I:%M:%S')
-
-slash = SlashCommand(client, sync_commands=True)
+client = commands.AutoShardedBot(
+  command_prefix = 'tc!',
+  intents = nextcord.Intents.all(),
+  activity = nextcord.Activity(
+    type = nextcord.ActivityType.watching,
+    name = f"🕊️ | tc!link"
+  )
+)
 client.remove_command("help")
-load_dotenv()
 
-consumer_key = os.getenv("CONSUMER_KEY")
-consumer_secret = os.getenv("CONSUMER_SECRET")
-bearer_token = os.getenv("BEARER_TOKEN")
+logging.basicConfig(
+  level = logging.INFO,
+  format = '[%(asctime)s] [%(levelname)s] %(message)s',
+  datefmt = '%Y/%m/%d %I:%M:%S'
+)
+
+
+load_dotenv()
+TWITTER_CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY")
+TWITTER_CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET")
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
 twitter_urls = ["https://twitter.com", "https://fxtwitter.com"]
 
 @client.event
-async def on_ready():
+async def on_ready() -> None:
   logging.info(f"Logged in as {client.user}")
 
 @client.event
-async def on_error(event):
+async def on_error(event: str) -> None:
   error = sys.exc_info()
   logging.error(f"Event {event} raised {error[0].__name__}: {error[1]}")
 
 @client.event
-async def on_resumed():
+async def on_resumed() -> None:
   logging.info(f"Connection resumed")
 
 @client.event
-async def on_connect():
+async def on_connect() -> None:
   logging.info("Connected to Discord")
 
 @client.event
-async def on_disconnect():
+async def on_disconnect() -> None:
   logging.warning("Disconnected to Discord")
 
-def get_id_from_url(tweet_url):
+def get_id_from_url(tweet_url: str) -> Union[str, None]:
   if any(word in tweet_url for word in twitter_urls) and tweet_url.find('status') != -1:
-      if len(tweet_url.split("https://")) == 2:
-          if tweet_url.find(twitter_urls[0]) != -1:
-            url_location = tweet_url.find(twitter_urls[0])
-          else:
-            url_location = tweet_url.find(twitter_urls[1])
-          tweet_url = tweet_url[url_location:]
-          tweet_id = tweet_url[tweet_url.find('status') + 7:].split("?")[0]
-          return tweet_id
-  else: return None
+    if len(tweet_url.split("https://")) == 2:
+      if tweet_url.find(twitter_urls[0]) != -1:
+        url_location = tweet_url.find(twitter_urls[0])
+      else:
+        url_location = tweet_url.find(twitter_urls[1])
+      tweet_url = tweet_url[url_location:]
+      tweet_id = tweet_url[tweet_url.find('status') + 7:].split("?")[0]
+      return tweet_id
+  else:
+    return None
 
-async def link_account(user, catch_message = None):
-  pins = await user.pins()
+async def link_account(user: Union[nextcord.User, nextcord.Member], catch_message: nextcord.Message = None) -> None:
+  try:
+    await user.create_dm()
+    pins = await user.dm_channel.pins()
+    if pins is None:
+      return None
+  except:
+    return None
   if len(pins) != 0:
     for message in pins:
       await message.unpin()
   async for msg in user.history():
     if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
       await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-  if catch_message != None:
+  if catch_message is not None:
     await catch_message.delete()
-  auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+  auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
   try:
-    embed=discord.Embed(title = "🔗 Link Your Twitter Account", description = f"Please go to [Twitter API Authorize]({auth.get_authorization_url()}), click on \"Authorize app\", then send the verification PIN code here within 60 seconds.", color=0x3983f2)
-    auth_msg = await user.send(embed=embed)
+    embed = nextcord.Embed(
+      title = "🔗 Link Your Twitter Account",
+      description = f"Please go to [Twitter API Authorize]({auth.get_authorization_url()}), click on \"Authorize app\", then send the verification PIN code here within 60 seconds.",
+      color = 0x3983f2
+    )
+    auth_msg = await user.send(embed = embed)
   except:
     pass
   else:
-    def check(m):
+    def check(m: nextcord.Message) -> bool:
       return m.author != auth_msg.author and m.channel == auth_msg.channel
     try:
-      pin_code_msg = await client.wait_for(event="message", check=check, timeout=75.0)
+      pin_code_msg: nextcord.Message = await client.wait_for(event = "message", check = check, timeout = 75.0)
     except asyncio.TimeoutError:
-      embed=discord.Embed(title = "⚠️ Link Failed", description = "Authorization timeout, please try again.", color=0xeca42c)
-      embed.set_footer(text="ERR_TIMEOUT")
-      await user.send(embed=embed)
+      embed = nextcord.Embed(
+        title = "⚠️ Link Failed",
+        description = "Authorization timeout, please try again.",
+        color = 0xeca42c
+      )
+      embed.set_footer(text = "ERR_TIMEOUT")
+      await user.send(embed = embed)
     else:
       try:
         auth.get_access_token(pin_code_msg.content)
       except:
-        embed=discord.Embed(title = "⚠️ Link Failed", description = "Unauthorized PIN code.", color=0xeca42c)
+        embed = nextcord.Embed(
+          title = "⚠️ Link Failed",
+          description = "Unauthorized PIN code.",
+          color = 0xeca42c
+        )
         embed.set_footer(text="ERR_UNAUTHORIZED")
-        await user.send(embed=embed)
+        await user.send(embed = embed)
       else:
-        embed=discord.Embed(title = "✅ Account Linked", description = "You can unlink your account by using `/unlink`(`tc!unlink`) at any time.", color=0x3983f2)
-        await user.send(embed=embed)
+        embed = nextcord.Embed(
+          title = "✅ Account Linked",
+          description = "You can unlink your account by using `/unlink`(`tc!unlink`) at any time.",
+          color = 0x3983f2
+        )
+        await user.send(embed = embed)
         token_msg = await user.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
         await token_msg.pin()
 
-async def unlink_account(user, catch_message = None):
-  pins = await user.pins()
+async def unlink_account(user: Union[nextcord.User, nextcord.Member], catch_message: nextcord.Message = None) -> None:
+  try:
+    await user.create_dm()
+    pins = await user.dm_channel.pins()
+    if pins is None:
+      return None
+  except:
+    return None
   if len(pins) != 0:
     for message in pins:
       await message.unpin()
   async for msg in user.history():
     if msg.author == client.user and msg.content.startswith("Twitter User Access Token") or msg.content.startswith("Twitter User Token"):
       await msg.edit(content = "[Cancelled] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
-  if catch_message != None:
+  if catch_message is not None:
     await catch_message.delete()
-  embed=discord.Embed(title = "✅ Account Unlinked", description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).", color=0x3983f2)
-  await user.send(embed=embed)
+  embed = nextcord.Embed(
+    title = "✅ Account Unlinked",
+    description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps).",
+    color = 0x3983f2
+  )
+  await user.send(embed = embed)
 
 # async def create_tweet_process(ctx, text):
 #   user = ctx.author
@@ -192,43 +224,69 @@ async def unlink_account(user, catch_message = None):
 #   await ctx.channel.send(embed=embed, file=file)
 #   os.remove(f"./catch/{file_id}.png")
 
-async def get_twitter_client(user, notify:bool):
-  pins = await user.pins()
-  link_notify_embed=discord.Embed(title = "ℹ️ You Haven't Linked Your Twitter Account Yet", description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.", color=0x3983f2)
-  if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") == False) and notify == True:
+async def get_twitter_client(user: Union[nextcord.User, nextcord.Member], notify: bool) -> Union[tweepy.Client, None]:
+  try:
+    await user.create_dm()
+    pins = await user.dm_channel.pins()
+    if pins is None:
+      return None
+  except:
+    return None
+  link_notify_embed = nextcord.Embed(
+    title = "ℹ️ You Haven't Linked Your Twitter Account Yet",
+    description = f"Use `/link`(`tc!link`) to link your Twitter account, then you can you can interact with Twitter in Discord.",
+    color = 0x3983f2
+  )
+  if (len(pins) == 0 or pins[0].content.startswith("Twitter User Access Token") is False) and notify is True:
     try:
-      await user.send(embed=link_notify_embed)
-    except: pass
+      await user.send(embed = link_notify_embed)
+    except:
+      pass
+    return None
   if len(pins) != 0 and pins[0].content.startswith("Twitter User Access Token"):
     token_list = pins[0].content.split("\n")
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
     access_token = token_list[1].replace("`", "").replace("||", "")
     access_token_secret = token_list[2].replace("`", "").replace("||", "")
     auth.set_access_token(access_token, access_token_secret)
-    return tweepy.Client(bearer_token = bearer_token, consumer_key = consumer_key, consumer_secret = consumer_secret, access_token = access_token, access_token_secret = access_token_secret)
+    return tweepy.Client(
+      bearer_token = TWITTER_BEARER_TOKEN,
+      consumer_key = TWITTER_CONSUMER_KEY,
+      consumer_secret = TWITTER_CONSUMER_SECRET,
+      access_token = access_token,
+      access_token_secret = access_token_secret
+    )
 
 @client.event
-async def on_raw_reaction_add(payload):
+async def on_raw_reaction_add(payload: nextcord.RawReactionActionEvent) -> None:
   channel = client.get_channel(payload.channel_id)
   if channel != None:
     message = await channel.fetch_message(payload.message_id)
-    if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) != None and str(payload.emoji) in ["❤️", "🔁", "📡"]:
+    if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) is not None and str(payload.emoji) in ["❤️", "🔁", "📡"]:
       user = client.get_user(int(payload.user_id))
       if user != client.user:
         twitter_client = await get_twitter_client(user, True)
+        if twitter_client is None:
+          return None
         if str(payload.emoji) == "❤️":
           try:
             twitter_client.like(get_id_from_url(message.content))
-          except: pass
+          except:
+            pass
         if str(payload.emoji) == "🔁":
           try:
             twitter_client.retweet(get_id_from_url(message.content))
-          except: pass
+          except:
+            pass
         if str(payload.emoji) == "📡":
           try:
-            tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+            tweet = twitter_client.get_tweet(
+              get_id_from_url(message.content),
+              expansions = 'author_id'
+            )
             twitter_client.follow_user(tweet.includes['users'][0].id)
-          except: pass
+          except:
+            pass
         # if str(payload.emoji) == "📥":
         #   try:
         #     tweet_id = get_id_from_url(message.content)
@@ -238,47 +296,64 @@ async def on_raw_reaction_add(payload):
         #   except: pass
 
 @client.event
-async def on_raw_reaction_remove(payload):
+async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> None:
   channel = client.get_channel(payload.channel_id)
-  if channel != None:
+  if channel is not None:
     message = await channel.fetch_message(payload.message_id)
-    if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) != None and str(payload.emoji) in ["❤️", "🔁", "📡"]:
+    if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) is not None and str(payload.emoji) in ["❤️", "🔁", "📡"]:
       user = client.get_user(int(payload.user_id))
       if user != client.user:
         twitter_client = await get_twitter_client(user, False)
+        if twitter_client is None:
+          return None
         if str(payload.emoji) == "❤️":
           try:
             twitter_client.unlike(get_id_from_url(message.content))
-          except: pass
+          except:
+            pass
         if str(payload.emoji) == "🔁":
           try:
             twitter_client.unretweet(get_id_from_url(message.content))
-          except: pass
+          except:
+            pass
         if str(payload.emoji) == "📡":
           try:
-            tweet = twitter_client.get_tweet(get_id_from_url(message.content), expansions='author_id')
+            tweet = twitter_client.get_tweet(
+              get_id_from_url(message.content),
+              expansions = 'author_id'
+            )
             twitter_client.unfollow_user(tweet.includes['users'][0].id)
-          except: pass
+          except:
+            pass
 
 @client.event
-async def on_message(message):
-  if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) != None and isinstance(message.channel, discord.DMChannel) == False:
-    for i in ["📡", "🔁", "❤️"]:
+async def on_message(message: nextcord.Message) -> None:
+  if any(word in message.content for word in twitter_urls) and get_id_from_url(message.content) is not None and isinstance(message.channel, nextcord.DMChannel) is False:
+    for emoji in ["📡", "🔁", "❤️"]:
       try:
-        await message.add_reaction(i)
-      except: pass
+        await message.add_reaction(emoji)
+      except:
+        pass
       await asyncio.sleep(0.3)
   await client.process_commands(message)
 
 @client.command()
-async def invite(ctx):
-  embed=discord.Embed(title = "", description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!", color=0x3983f2)
-  await ctx.send(embed=embed)
+async def invite(ctx: commands.Context) -> None:
+  embed = nextcord.Embed(
+    title = "",
+    description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!",
+    color = 0x3983f2
+  )
+  await ctx.send(embed = embed)
 
-@slash.slash(description="Show invite link")
-async def invite(ctx):
-  embed=discord.Embed(title = "", description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!", color=0x3983f2)
-  await ctx.send(embed=embed)
+@client.slash_command(description = "Show invite link")
+async def invite(interaction: nextcord.Interaction) -> None:
+  embed = nextcord.Embed(
+    title = "",
+    description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!",
+    color = 0x3983f2
+  )
+  await interaction.send(embed = embed)
 
 # @client.command()
 # async def ping(ctx, index=None):
@@ -307,23 +382,23 @@ async def invite(ctx):
 #     embed=discord.Embed(title = "⚠️ Command Failed", description = "Index out of range(1~60).\n`/ping <index(1~60)>`", color=0xeca42c)
 #     embed.set_footer(text="ERR_INVALIDVALUE")
 #     await ctx.send(embed=embed)
-    
+
 @client.command()
-async def link(ctx):
+async def link(ctx: commands.Context) -> None:
   await link_account(ctx.author)
 
-@slash.slash(description="Link your Twitter account")
-async def link(ctx):
-  catch_message = await ctx.send("Processing...")
-  await link_account(ctx.author, catch_message)
+@client.slash_command(description = "Link your Twitter account")
+async def link(interaction: nextcord.Interaction) -> None:
+  catch_message = await interaction.send("Processing...")
+  await unlink_account(interaction.user, catch_message)
 
 @client.command()
-async def unlink(ctx):
+async def unlink(ctx: commands.Context) -> None:
   await unlink_account(ctx.author)
 
-@slash.slash(description="Unlink your Twitter account")
-async def unlink(ctx):
-  catch_message = await ctx.send("Processing...")
-  await unlink_account(ctx.author, catch_message)
+@client.slash_command(description = "Unlink your Twitter account")
+async def unlink(interaction: nextcord.Interaction) -> None:
+  catch_message = await interaction.send("Processing...")
+  await unlink_account(interaction.user, catch_message)
 
-client.run(os.getenv("TOKEN"))
+client.run(os.getenv("DISCORD_BOT_TOKEN"))
