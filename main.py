@@ -199,7 +199,7 @@ async def on_raw_reaction_add(payload: nextcord.RawReactionActionEvent) -> None:
       return
 
     case "🔁":
-      twitter_client.etweet(get_post_id_from_url(message.content))
+      twitter_client.retweet(get_post_id_from_url(message.content))
       return
       
     case "📡":
@@ -241,7 +241,7 @@ async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> No
       return
 
     case "🔁":
-      twitter_client.unetweet(get_post_id_from_url(message.content))
+      twitter_client.unretweet(get_post_id_from_url(message.content))
       return
       
     case "📡":
