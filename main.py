@@ -50,6 +50,7 @@ async def on_resumed() -> None:
 @client.event
 async def on_connect() -> None:
   logging.info("Connected to Discord")
+  await client.sync_all_application_commands()
 
 @client.event
 async def on_disconnect() -> None:
