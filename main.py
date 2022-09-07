@@ -8,10 +8,15 @@ import logging
 from dotenv import load_dotenv
 from typing import Union
 
+intents = nextcord.Intents.default()
+intents.members = True
+intents.messages = True
+intents.message_content = True
+intents.reactions = True
 
 client = commands.AutoShardedBot(
   command_prefix = 'tc!',
-  intents = nextcord.Intents.all(),
+  intents = intents,
   activity = nextcord.Activity(
     type = nextcord.ActivityType.watching,
     name = "🕊️ | /connect"
@@ -25,12 +30,11 @@ logging.basicConfig(
   datefmt = '%Y/%m/%d %I:%M:%S'
 )
 
-
 load_dotenv()
 TWITTER_CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY")
 TWITTER_CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET")
 TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
-TWITTER_POST_URL_REGEX = re.compile(r"https:\/\/(www\.)?twitter\.com\/[A-Za-z0-9_][^ ]+\/status\/[0-9]{19}")
+TWITTER_POST_URL_REGEX = re.compile(r"https:\/\/(www\.)?(twitter|fxtwitter)\.com\/[A-Za-z0-9_][^ =&/:]{1,15}\/status\/[0-9]{19}")
 
 @client.event
 async def on_ready() -> None:
