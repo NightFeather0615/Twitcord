@@ -7,9 +7,6 @@ import tweepy
 import logging
 from dotenv import load_dotenv
 from typing import Union
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
-# from matplotlib import *
 
 
 client = commands.AutoShardedBot(
@@ -329,6 +326,10 @@ client.run(os.getenv("DISCORD_BOT_TOKEN"))
 
 
 # ! ~ The code below is archived/discarded ~ ! #
+
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
+# from matplotlib import *
 
 # @client.command()
 # async def ping(ctx, index=None):
