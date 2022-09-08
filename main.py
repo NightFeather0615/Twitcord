@@ -200,11 +200,9 @@ async def on_raw_reaction_add(payload: nextcord.RawReactionActionEvent) -> None:
   match str(payload.emoji):
     case "❤️":
       twitter_client.like(get_post_id_from_url(message.content))
-      return
 
     case "🔁":
       twitter_client.retweet(get_post_id_from_url(message.content))
-      return
       
     case "📡":
       tweet = twitter_client.get_tweet(
@@ -212,14 +210,12 @@ async def on_raw_reaction_add(payload: nextcord.RawReactionActionEvent) -> None:
         expansions = 'author_id'
       )
       twitter_client.follow_user(tweet.includes['users'][0].id)
-      return
           
     # case "📥":
     #   tweet_id = get_post_id_from_url(message.content)
     #   tweet = twitter_client.get_tweet(tweet_id, expansions='attachments.media_keys', media_fields='url')
     #   medias = tweet.includes['media']
     #   await download_image(user, tweet_id ,medias)
-    #   return
 
 @client.event
 async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> None:
@@ -242,11 +238,9 @@ async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> No
   match str(payload.emoji):
     case "❤️":
       twitter_client.unlike(get_post_id_from_url(message.content))
-      return
 
     case "🔁":
       twitter_client.unretweet(get_post_id_from_url(message.content))
-      return
       
     case "📡":
       tweet = twitter_client.get_tweet(
@@ -254,7 +248,6 @@ async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> No
         expansions = 'author_id'
       )
       twitter_client.unfollow_user(tweet.includes['users'][0].id)
-      return
 
 @client.event
 async def on_message(message: nextcord.Message) -> None:
