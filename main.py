@@ -7,6 +7,7 @@ import tweepy
 import logging
 from dotenv import load_dotenv
 from typing import Union
+import gettext
 
 intents = nextcord.Intents.default()
 intents.members = True
@@ -29,6 +30,13 @@ logging.basicConfig(
   format = '[%(asctime)s] [%(levelname)s] %(message)s',
   datefmt = '%Y/%m/%d %I:%M:%S'
 )
+
+I18N_TRANSLATION = {
+  "en-US": gettext.translation("en_US", localedir = "./locale", languages = ["en_US"]),
+  "zh-TW": gettext.translation("zh_TW", localedir = "./locale", languages = ["zh_TW"]),
+  "zh-CN": gettext.translation("zh_CN", localedir = "./locale", languages = ["zh_CN"])
+}
+I18N_TRANSLATION["en-US"].install()
 
 load_dotenv()
 TWITTER_CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY")
@@ -58,16 +66,26 @@ async def on_connect() -> None:
 async def on_disconnect() -> None:
   logging.warning("Disconnected to Discord")
 
+@client.application_command_before_invoke
+async def application_command_before_invoke(hook: nextcord.Interaction):
+  i18n_translate(hook.locale)
+
+def i18n_translate(domain: str) -> None:
+  if I18N_TRANSLATION.get(domain) is None:
+    I18N_TRANSLATION["en-US"].install()
+  else:
+    I18N_TRANSLATION[domain].install()
+
 def get_post_id_from_url(content: str) -> Union[str, None]:
   matchs = TWITTER_POST_URL_REGEX.search(content)
   if matchs is None:
     return None
   return matchs.group().split('/')[-1]
 
-async def connect_account(user: Union[nextcord.User, nextcord.Member]) -> None:
+async def connect_account(interaction: nextcord.Interaction, isDM: bool = False) -> None:
   try:
-    await user.create_dm()
-    pins = await user.dm_channel.pins()
+    await interaction.user.create_dm()
+    pins = await interaction.user.dm_channel.pins()
     if pins is None:
       return None
     for message in pins:
@@ -75,58 +93,62 @@ async def connect_account(user: Union[nextcord.User, nextcord.Member]) -> None:
   except:
     return None
 
-  async for msg in user.history():
+  async for msg in interaction.user.history():
     if msg.author == client.user and msg.content.startswith(("Twitter User Access Token", "Twitter User Token")):
       await msg.edit(content = "[Disconnected] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
     
   auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
   try:
     embed = nextcord.Embed(
-      title = "🔗 Connect to Your Twitter Account",
-      description = f"Please go to [Twitter API Authorize]({auth.get_authorization_url()}), click on \"Authorize app\", then send the verification PIN code here within 60 seconds.",
+      title = _(":link: Connect to Your Twitter Account"),
+      description = _("Please go to [Twitter API Authorize](%s), click on \"Authorize app\", then send the verification PIN code here within 60 seconds") % (auth.get_authorization_url()),
       color = 0x3983f2
     )
-    auth_msg = await user.send(embed = embed)
+    if isDM:
+      auth_msg: nextcord.WebhookMessage = await interaction.followup.send(embed = embed)
+      print(auth_msg)
+    else:
+      auth_msg = await interaction.user.send(embed = embed)
   except:
     return None
 
   def check(m: nextcord.Message) -> bool:
-    return m.author != auth_msg.author and m.channel == auth_msg.channel
+    return m.author != auth_msg.author and m.channel.id == auth_msg.channel.id and not m.author.bot
   try:
     pin_code_msg: nextcord.Message = await client.wait_for(event = "message", check = check, timeout = 75.0)
   except asyncio.TimeoutError:
     embed = nextcord.Embed(
-      title = "⚠️ Connect Failed",
-      description = "Authorization timeout, please try again.",
+      title = _(":warning: Connect Failed"),
+      description = _("Authorization timeout, please try again"),
       color = 0xeca42c
     )
     embed.set_footer(text = "ERR_TIMEOUT")
-    await user.send(embed = embed)
+    await interaction.user.send(embed = embed)
   else:
     try:
       auth.get_access_token(pin_code_msg.content)
     except:
       embed = nextcord.Embed(
-        title = "⚠️ Connect Failed",
-        description = "Unauthorized PIN code.",
+        title = _(":warning: Connect Failed"),
+        description = _("Unauthorized PIN code"),
         color = 0xeca42c
       )
-      embed.set_footer(text="ERR_UNAUTHORIZED")
-      await user.send(embed = embed)
+      embed.set_footer(text = "ERR_UNAUTHORIZED")
+      await interaction.user.send(embed = embed)
     else:
       embed = nextcord.Embed(
-        title = "✅ Account Connected",
-        description = "You can disconnect to your account by using `/disconnect` at any time.",
+        title = _(":white_check_mark: Account Connected"),
+        description = _("You can disconnect to your account by using `/disconnect` at any time"),
         color = 0x3983f2
       )
-      await user.send(embed = embed)
-      token_msg = await user.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
+      await interaction.user.send(embed = embed)
+      token_msg = await interaction.user.send(f"Twitter User Access Token\n||`{auth.access_token}`||\n||`{auth.access_token_secret}`||")
       await token_msg.pin()
 
-async def disconnect_account(user: Union[nextcord.User, nextcord.Member]) -> None:
+async def disconnect_account(interaction: nextcord.Interaction, isDM: bool = False) -> None:
   try:
-    await user.create_dm()
-    pins = await user.dm_channel.pins()
+    await interaction.user.create_dm()
+    pins = await interaction.user.dm_channel.pins()
     if pins is None:
       return None
     for message in pins:
@@ -134,16 +156,19 @@ async def disconnect_account(user: Union[nextcord.User, nextcord.Member]) -> Non
   except:
     return None
 
-  async for msg in user.history():
+  async for msg in interaction.user.history():
     if msg.author == client.user and msg.content.startswith(("Twitter User Access Token", "Twitter User Token")):
       await msg.edit(content = "[Disconnected] Twitter User Access Token\n`[Access Token cancelled]`\n`[Access Token Secret cancelled]`")
 
   embed = nextcord.Embed(
-    title = "✅ Account Disconnected",
-    description = "All messages containing user access keys have been overwritten.\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps)",
+    title = _(":white_check_mark: Account Disconnected"),
+    description = _("All messages containing user access keys have been overwritten\n\nYou can revoke the permissions of this application in Twitter's [user settings](https://twitter.com/settings/connected_apps)"),
     color = 0x3983f2
   )
-  await user.send(embed = embed)
+  if isDM and interaction is not None:
+    await interaction.followup.send(embed = embed)
+  else:
+    await interaction.user.send(embed = embed)
 
 async def get_twitter_client(user: Union[nextcord.User, nextcord.Member], notify: bool) -> Union[tweepy.Client, None]:
   try:
@@ -156,8 +181,8 @@ async def get_twitter_client(user: Union[nextcord.User, nextcord.Member], notify
   
   if not pins[0].content.startswith("Twitter User Access Token") and notify is True:
     link_notify_embed = nextcord.Embed(
-      title = "ℹ️ You Haven't Connected Your Twitter Account Yet",
-      description = f"Use `/connect` to connect to your Twitter account, then you can interact with Twitter in Discord",
+      title = _(":information_source: You Haven't Connected Your Twitter Account Yet"),
+      description = _("Use `/connect` to connect to your Twitter account, then you can interact with Twitter in Discord"),
       color = 0x3983f2
     )
     try:
@@ -275,7 +300,7 @@ async def on_message(message: nextcord.Message) -> None:
 async def slash_invite(interaction: nextcord.Interaction) -> None:
   embed = nextcord.Embed(
     title = "",
-    description = f"Click [here](https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands) to invite <@!{client.user.id}> to your server!",
+    description = _("Click [here](%s) to invite <@!%s> to your server!") % ("https://discord.com/oauth2/authorize?client_id=917122425102163971&permissions=412317248576&scope=bot%20applications.commands", client.user.id),
     color = 0x3983f2
   )
   await interaction.response.send_message(embed = embed, ephemeral = True)
@@ -283,42 +308,49 @@ async def slash_invite(interaction: nextcord.Interaction) -> None:
 @client.slash_command(
   name = "connect",
   name_localizations = {
-    nextcord.Locale.zh_TW: "關聯",
-    nextcord.Locale.zh_CN: "关联",
+    nextcord.Locale.zh_TW: "連接",
+    nextcord.Locale.zh_CN: "连接",
   },
   description = "Connect to your Twitter account",
   description_localizations = {
-    nextcord.Locale.zh_TW: "關聯推特帳號",
-    nextcord.Locale.zh_CN: "关联推特帐号",
+    nextcord.Locale.zh_TW: "連接你的 Twitter 帳號",
+    nextcord.Locale.zh_CN: "连接你的 Twitter 帐号",
   }
 )
 async def slash_connect(interaction: nextcord.Interaction) -> None:
-  await interaction.response.send_message(
-    "Please check your DM, and make sure you turned allow direct messages on",
-    ephemeral = True
-  )
-  await connect_account(interaction.user)
+  if isinstance(interaction.channel, nextcord.PartialMessageable):
+    await interaction.response.defer()
+  else:
+    await interaction.response.send_message(
+      _("Please check your DM, and make sure you turned allow direct messages on"),
+      ephemeral = True
+    )
+  await connect_account(interaction, isinstance(interaction.channel, nextcord.PartialMessageable))
 
 @client.slash_command(
   name = "disconnect",
   name_localizations = {
-    nextcord.Locale.zh_TW: "取消關聯",
-    nextcord.Locale.zh_CN: "取消关联",
+    nextcord.Locale.zh_TW: "斷開連接",
+    nextcord.Locale.zh_CN: "断开连接",
   },
   description = "Disconnect to your Twitter account",
   description_localizations = {
-    nextcord.Locale.zh_TW: "取消與推特帳號的關聯",
-    nextcord.Locale.zh_CN: "取消与推特帐号的关联",
+    nextcord.Locale.zh_TW: "中斷與 Twitter 帳號的連接",
+    nextcord.Locale.zh_CN: "中断与 Twitter 帐号的连接",
   }
 )
 async def slash_disconnect(interaction: nextcord.Interaction) -> None:
-  await interaction.response.send_message(
-    "Please check your DM, and make sure you turned allow direct messages on",
-    ephemeral = True
-  )
-  await disconnect_account(interaction.user)
+  if isinstance(interaction.channel, nextcord.PartialMessageable):
+    await interaction.response.defer()
+  else:
+    await interaction.response.send_message(
+      _("Please check your DM, and make sure you turned allow direct messages on"),
+      ephemeral = True
+    )
+  await disconnect_account(interaction, isinstance(interaction.channel, nextcord.PartialMessageable))
 
-client.run(os.getenv("DISCORD_BOT_TOKEN"))
+if __name__ == "__main__":
+  client.run(os.getenv("DISCORD_BOT_TOKEN"))
 
 
 

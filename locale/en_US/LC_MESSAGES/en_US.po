@@ -1,0 +1,87 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2022-09-09 13:25+0800\n"
+"PO-Revision-Date: 2022-09-09 14:28+0800\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 3.1.1\n"
+
+#: main.py:85
+msgid ":link: Connect to Your Twitter Account"
+msgstr ":link: Connect to Your Twitter Account"
+
+#: main.py:86
+msgid ""
+"Please go to [Twitter API Authorize](%s), click on \"Authorize app\", then "
+"send the verification PIN code here within 60 seconds"
+msgstr ""
+"Please go to [Twitter API Authorize](%s), click on \"Authorize app\", then "
+"send the verification PIN code here within 60 seconds"
+
+#: main.py:99 main.py:110
+msgid ":warning: Connect Failed"
+msgstr ":warning: Connect Failed"
+
+#: main.py:100
+msgid "Authorization timeout, please try again"
+msgstr "Authorization timeout, please try again"
+
+#: main.py:111
+msgid "Unauthorized PIN code"
+msgstr "Unauthorized PIN code"
+
+#: main.py:118
+msgid ":white_check_mark: Account Connected"
+msgstr ":white_check_mark: Account Connected"
+
+#: main.py:119
+msgid "You can disconnect to your account by using `/disconnect` at any time"
+msgstr "You can disconnect to your account by using `/disconnect` at any time"
+
+#: main.py:142
+msgid ":white_check_mark: Account Disconnected"
+msgstr ":white_check_mark: Account Disconnected"
+
+#: main.py:143
+msgid ""
+"All messages containing user access keys have been overwritten\n"
+"\n"
+"You can revoke the permissions of this application in Twitter's [user "
+"settings](https://twitter.com/settings/connected_apps)"
+msgstr ""
+"All messages containing user access keys have been overwritten\n"
+"\n"
+"You can revoke the permissions of this application in Twitter's [user "
+"settings](https://twitter.com/settings/connected_apps)"
+
+#: main.py:159
+msgid ":information_source: You Haven't Connected Your Twitter Account Yet"
+msgstr ":information_source: You Haven't Connected Your Twitter Account Yet"
+
+#: main.py:160
+msgid ""
+"Use `/connect` to connect to your Twitter account, then you can interact "
+"with Twitter in Discord"
+msgstr ""
+"Use `/connect` to connect to your Twitter account, then you can interact "
+"with Twitter in Discord"
+
+#: main.py:278
+msgid "Click [here](%s) to invite <@!%s> to your server!"
+msgstr "Click [here](%s) to invite <@!%s> to your server!"
+
+#: main.py:297 main.py:316
+msgid "Please check your DM, and make sure you turned allow direct messages on"
+msgstr ""
+"Please check your DM, and make sure you turned allow direct messages on"
