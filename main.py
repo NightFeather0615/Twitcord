@@ -106,7 +106,6 @@ async def connect_account(interaction: nextcord.Interaction, isDM: bool = False)
     )
     if isDM:
       auth_msg: nextcord.WebhookMessage = await interaction.followup.send(embed = embed)
-      print(auth_msg)
     else:
       auth_msg = await interaction.user.send(embed = embed)
   except:
