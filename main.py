@@ -305,6 +305,26 @@ async def slash_invite(interaction: nextcord.Interaction) -> None:
   await interaction.response.send_message(embed = embed, ephemeral = True)
 
 @client.slash_command(
+  name = "support",
+  name_localizations = {
+    nextcord.Locale.zh_TW: "支援",
+    nextcord.Locale.zh_CN: "支援",
+  },
+  description = "Contact developers outside Discord",
+  description_localizations = {
+    nextcord.Locale.zh_TW: "在 Discord 外與開發者聯絡",
+    nextcord.Locale.zh_CN: "在 Discord 外与开发者联络",
+  }
+)
+async def slash_support(interaction: nextcord.Interaction) -> None:
+  embed = nextcord.Embed(
+    title = "",
+    description = "[GitHub Issues](https://github.com/NightFeather0615/Twitcord/issues)",
+    color = 0x3983f2
+  )
+  await interaction.response.send_message(embed = embed, ephemeral = True)
+
+@client.slash_command(
   name = "connect",
   name_localizations = {
     nextcord.Locale.zh_TW: "連接",
