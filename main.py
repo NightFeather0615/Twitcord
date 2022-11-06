@@ -231,15 +231,10 @@ async def on_raw_reaction_add(payload: nextcord.RawReactionActionEvent) -> None:
     case "📡":
       tweet = twitter_client.get_tweet(
         get_post_id_from_url(message.content),
-        expansions = 'author_id'
+        expansions = 'author_id',
+        user_auth = True
       )
       twitter_client.follow_user(tweet.includes['users'][0].id)
-          
-    # case "📥":
-    #   tweet_id = get_post_id_from_url(message.content)
-    #   tweet = twitter_client.get_tweet(tweet_id, expansions='attachments.media_keys', media_fields='url')
-    #   medias = tweet.includes['media']
-    #   await download_image(user, tweet_id ,medias)
 
 @client.event
 async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> None:
@@ -269,7 +264,8 @@ async def on_raw_reaction_remove(payload: nextcord.RawReactionActionEvent) -> No
     case "📡":
       tweet = twitter_client.get_tweet(
         get_post_id_from_url(message.content),
-        expansions = 'author_id'
+        expansions = 'author_id',
+        user_auth = True
       )
       twitter_client.unfollow_user(tweet.includes['users'][0].id)
 
@@ -373,7 +369,7 @@ if __name__ == "__main__":
 
 
 
-# ! ~ The code below is archived/discarded ~ ! #
+# ! ~ The code below for fancy ping check is archived/discarded ~ ! #
 
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt

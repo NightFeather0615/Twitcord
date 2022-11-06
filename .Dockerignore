@@ -1,3 +1,4 @@
-.vscode
-.env
+./.vscode
+./__pypackages__
+*.env
 *.tar
