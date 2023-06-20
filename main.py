@@ -42,7 +42,7 @@ load_dotenv()
 TWITTER_CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY")
 TWITTER_CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET")
 TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
-TWITTER_POST_URL_REGEX = re.compile(r"https:\/\/(www\.)?(twitter|fxtwitter)\.com\/[A-Za-z0-9_][^ =&/:]{1,15}\/status\/[0-9]{19}")
+TWITTER_POST_URL_REGEX = re.compile(r"https:\/\/(www\.)?(twitter|fxtwitter|vxtwitter)\.com\/[A-Za-z0-9_][^ =&/:]{1,15}\/status\/[0-9]{19}")
 
 @client.event
 async def on_ready() -> None:

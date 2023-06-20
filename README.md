@@ -1,3 +1,6 @@
+# Deprecated
+This project is no longer maintenance, go check the [brand new version of Twitcord](https://github.com/NightFeather0615/twitcord-rs) built with Rust 🦀!
+
 # Twitcord
 A simple bot that helps you interact with Twitter in Discord  
 
